@@ -1,6 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-// Certifique-se de que a imagem está nesta pasta
+// Certifique-se de que o caminho da imagem do brasão está correto para a sua estrutura
 import brasaoImg from '../assets/brasao-paroquia.png';
 
 interface LoginProps {
@@ -27,15 +27,15 @@ export function Login({ onLogin }: LoginProps) {
 
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm mx-auto z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-        {/* Branding - RifasCon */}
+        {/* Branding - RifaoCon */}
         <div className="flex flex-col items-center text-center mb-10">
-          <div className="w-32 h-32 md:w-36 md:h-36 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(207,160,48,0.1)] p-2">
-            <img
-              src={brasaoImg}
-              alt="Brasão Paróquia"
-              className="w-full h-full object-contain drop-shadow-lg"
-            />
-          </div>
+
+          {/* Brasão renderizado diretamente, sem o círculo branco de fundo */}
+          <img
+            src={brasaoImg}
+            alt="Brasão Paróquia"
+            className="w-32 h-32 md:w-36 md:h-36 object-contain mb-6 drop-shadow-xl z-10"
+          />
 
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">RifaoCon</h1>
           <p className="text-white/70 text-sm md:text-base font-medium max-w-[280px] leading-relaxed">
