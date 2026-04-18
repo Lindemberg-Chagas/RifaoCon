@@ -30,9 +30,9 @@ export function Login({ onLogin }: LoginProps) {
         {/* Branding - RifaoCon */}
         <div className="flex flex-col items-center text-center mb-10">
 
-          {/* Brasão renderizado diretamente */}
+          {/* Brasão renderizado diretamente da pasta public */}
           <img
-            src={brasaoImg}
+            src="/brasao-paroquia.png"
             alt="Brasão Paróquia"
             className="w-32 h-32 md:w-36 md:h-36 object-contain mb-6 drop-shadow-xl z-10"
           />
