@@ -7,7 +7,6 @@ interface DashboardProps {
 
 export function Dashboard({ setActiveTab }: DashboardProps) {
 
-  // Dados da rifa (Simulados)
   const currentRifa = {
     id: 1,
     name: 'Rifão de Inverno',
@@ -19,36 +18,31 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
   };
 
   const chartData = [
-    { name: 'Vendidos', value: 10000, color: '#cfa030' },
-    { name: 'Com Revendedores', value: 5000, color: '#ffffff' },
-    { name: 'Disponíveis', value: 5000, color: '#1e3a8a' }
+    { name: 'Vendidos', value: 12000, color: '#cfa030' },
+    { name: 'Com Revendedores', value: 5000, color: '#1e3a8a' },
+    { name: 'Disponíveis', value: 3000, color: '#e2e8f0' }
   ];
 
-  // Lógica de saudação dinâmica
   const currentHour = new Date().getHours();
   let greeting = 'Boa noite';
-  if (currentHour >= 5 && currentHour < 12) {
-    greeting = 'Bom dia';
-  } else if (currentHour >= 12 && currentHour < 18) {
-    greeting = 'Boa tarde';
-  }
+  if (currentHour >= 5 && currentHour < 12) greeting = 'Bom dia';
+  else if (currentHour >= 12 && currentHour < 18) greeting = 'Boa tarde';
 
   return (
-    <div className="min-h-screen bg-slate-50 font-['Inter']">
+    <div className="min-h-screen bg-slate-100 font-['Inter'] selection:bg-[#cfa030]/30">
 
-      {/* Barra de Navegação Superior */}
-      <header className="bg-[#1e3a8a] text-white px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
+      {/* Navbar Superior de Alto Contraste */}
+      <header className="bg-[#1e3a8a] text-white px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg border-b border-[#cfa030]/20">
         <div className="flex items-center gap-4">
-          <button className="p-1 hover:bg-white/10 rounded-lg transition-colors">
-            <Menu className="w-6 h-6" />
+          <button className="p-2 hover:bg-white/10 rounded-xl transition-all">
+            <Menu className="w-6 h-6 text-[#cfa030]" />
           </button>
-          <span className="text-xl font-black tracking-tight uppercase">RifaoCon</span>
+          <span className="text-xl font-black tracking-tighter uppercase">RifaoCon</span>
         </div>
 
-        {/* Foto de Perfil - Clique para Admin */}
         <button
           onClick={() => setActiveTab('admin')}
-          className="w-10 h-10 rounded-full border-2 border-[#cfa030] overflow-hidden hover:scale-105 transition-transform shadow-lg"
+          className="w-11 h-11 rounded-full border-2 border-[#cfa030] overflow-hidden hover:scale-105 transition-all shadow-md active:scale-95"
         >
           <img
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lindemberg&backgroundColor=1e3a8a"
@@ -58,54 +52,50 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
         </button>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-32 md:pb-16 w-full">
+      <main className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-24 w-full">
 
-        {/* Saudação Minimalista */}
+        {/* Saudação */}
         <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-black text-[#1e3a8a] tracking-tight leading-tight">
-            Olá, Lindemberg.<br className="md:hidden" /> <span className="text-[#cfa030] font-medium">{greeting}!</span>
+          <h1 className="text-3xl md:text-4xl font-black text-[#1e3a8a] tracking-tight leading-tight">
+            Olá, Lindemberg. <span className="text-[#cfa030] drop-shadow-sm">{greeting}!</span>
           </h1>
         </div>
 
-        {/* Secção do Rifão - Responsiva e Limpa */}
-        <section className="mb-8 md:mb-12 bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start w-full">
-          <div className="w-full">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase text-[#1e3a8a] leading-[1.1] break-words overflow-hidden">
-              {currentRifa.name}
-            </h2>
-          </div>
+        {/* Secção do Título - Fundo Claro e Texto Escuro (Máximo Contraste) */}
+        <section className="mb-8 bg-white p-6 md:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-[#1e3a8a] leading-[1.1] uppercase break-words hyphens-auto">
+            {currentRifa.name}
+          </h2>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2 md:gap-3 text-sm md:text-base text-white font-medium bg-[#1e3a8a] w-fit px-3 md:px-4 py-2 md:py-2.5 rounded-xl shadow-sm">
-            <Calendar className="w-4 h-4 md:w-5 md:h-5 text-[#cfa030]" />
-            <span>{currentRifa.startDate}</span>
-            <span className="text-white/40 mx-0.5">—</span>
-            <span>{currentRifa.endDate}</span>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 bg-[#1e3a8a] text-white px-4 py-2.5 rounded-xl font-bold text-sm md:text-base shadow-md">
+              <Calendar className="w-5 h-5 text-[#cfa030]" />
+              <span>{currentRifa.startDate} — {currentRifa.endDate}</span>
+            </div>
           </div>
         </section>
 
-        {/* Grelha Técnica (Gráfico e Cards) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Bento Grid Técnico */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* Donut Chart */}
-          <div className="lg:col-span-8 p-6 md:p-8 lg:p-10 rounded-3xl relative overflow-hidden bg-[#1e3a8a] border border-[#cfa030]/20 shadow-lg">
-            <div className="flex justify-between items-start mb-8">
-              <h3 className="text-xs md:text-sm font-bold tracking-[0.15em] text-white/50 uppercase">Distribuição de Números</h3>
-              <div className="text-right">
-                <span className="block text-xl md:text-2xl font-black text-white leading-none">20.000</span>
-                <span className="text-[10px] font-bold text-[#cfa030] uppercase tracking-widest">Total</span>
+          {/* Gráfico Principal com Fundo Branco */}
+          <div className="lg:col-span-8 bg-white p-6 md:p-10 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden">
+            <div className="flex justify-between items-center mb-10">
+              <h3 className="text-sm font-black tracking-widest text-slate-400 uppercase">Distribuição de Números</h3>
+              <div className="bg-[#1e3a8a] text-white px-4 py-2 rounded-lg">
+                <span className="text-xl font-black">20.000</span>
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-              <div className="relative w-52 h-52 md:w-64 md:h-64 flex-shrink-0 flex items-center justify-center">
+            <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+              <div className="relative w-64 h-64 flex-shrink-0 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={chartData}
-                      innerRadius="65%"
+                      innerRadius="70%"
                       outerRadius="100%"
-                      stroke="rgba(255,255,255,0.1)"
-                      strokeWidth={2}
+                      strokeWidth={0}
                       paddingAngle={4}
                       dataKey="value"
                     >
@@ -113,56 +103,59 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#fff', color: '#1e3a8a' }}
-                    />
+                    <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-black text-white mt-1">20k</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-black text-[#1e3a8a]">20k</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Total</span>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 w-full">
+              <div className="flex flex-col gap-4 w-full">
                 {chartData.map((item, index) => (
-                  <div key={index} className="bg-white/5 p-4 rounded-2xl border border-white/10 flex justify-between items-center">
+                  <div key={index} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
                     <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                      <span className="text-sm font-bold text-white/80 uppercase tracking-wide">{item.name}</span>
+                      <div className="w-4 h-4 rounded-md" style={{ backgroundColor: item.color }}></div>
+                      <span className="text-sm font-black text-[#1e3a8a] uppercase tracking-wide">{item.name}</span>
                     </div>
-                    <span className="font-black text-white">{(item.value / 1000).toFixed(1)}k</span>
+                    <span className="text-lg font-black text-[#1e3a8a] italic">
+                      {((item.value / 20000) * 100).toFixed(0)}%
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Cards Laterais */}
-          <div className="lg:col-span-4 grid grid-cols-1 gap-6">
-            <button className="flex flex-col items-center justify-center p-8 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] rounded-3xl shadow-xl transition-transform active:scale-95 group">
-              <span className="text-xs uppercase tracking-widest mb-1 font-black opacity-70">Operação</span>
-              <span className="text-xl font-black flex items-center gap-2">Registrar Venda <ChevronRight className="w-5 h-5" /></span>
+          {/* Coluna de Ações e Metas */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+
+            <button className="flex flex-col items-center justify-center p-8 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] rounded-[2rem] shadow-lg shadow-[#cfa030]/20 transition-all active:scale-95 group border-b-4 border-black/10">
+              <span className="text-xs font-black uppercase tracking-[0.2em] mb-2 opacity-60">Operação</span>
+              <span className="text-2xl font-black flex items-center gap-2">VENDER <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></span>
             </button>
 
-            <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Meta Financeira</p>
-              <div className="flex items-baseline gap-1 text-[#1e3a8a]">
-                <span className="text-lg font-bold opacity-50">R$</span>
-                <span className="text-3xl font-black tracking-tight">75k</span>
+            <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Meta da Edição</p>
+              <div className="flex items-baseline gap-2 text-[#1e3a8a] mb-4">
+                <span className="text-4xl font-black">75k</span>
+                <span className="text-lg font-bold opacity-30">EUR/BRL</span>
               </div>
-              <div className="mt-4 h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="bg-[#cfa030] h-full w-[66%] rounded-full"></div>
+              <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                <div className="bg-[#cfa030] h-full w-[66%] rounded-full shadow-[0_0_12px_rgba(207,160,48,0.4)]"></div>
               </div>
             </div>
 
-            <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
-              <Package className="absolute -right-4 -bottom-4 text-slate-100 w-24 h-24" />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Blocos Impressos</p>
-              <div className="text-[#1e3a8a]">
-                <span className="text-3xl font-black">833</span>
-                <span className="text-sm font-bold opacity-40 ml-1">unid.</span>
+            <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden group">
+              <Package className="absolute -right-6 -bottom-6 text-slate-100 w-32 h-32 transition-transform group-hover:scale-110 duration-500" />
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 relative z-10">Stock de Blocos</p>
+              <div className="text-[#1e3a8a] relative z-10">
+                <span className="text-4xl font-black tracking-tighter">833</span>
+                <span className="text-md font-bold opacity-30 ml-2">unid.</span>
               </div>
             </div>
+
           </div>
 
         </div>
