@@ -94,7 +94,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
           {/* Gráfico Principal com Fundo Azul Escuro */}
-          <div className="lg:col-span-8 bg-[#1e3a8a] p-6 md:p-10 rounded-[2rem] border border-[#cfa030]/20 shadow-lg relative overflow-hidden">
+          <div className="lg:col-span-8 bg-[#4873e8] p-6 md:p-10 rounded-[2rem] border border-[#cfa030]/20 shadow-lg relative overflow-hidden">
             <div className="flex justify-between items-center mb-10">
               <h3 className="text-sm font-black tracking-widest text-white/50 uppercase">Distribuição de Números</h3>
               <div className="text-right">
