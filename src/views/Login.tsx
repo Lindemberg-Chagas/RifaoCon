@@ -30,7 +30,7 @@ export function Login({ onLogin }: LoginProps) {
         {/* Branding - RifaoCon */}
         <div className="flex flex-col items-center text-center mb-10">
 
-          {/* Brasão renderizado diretamente, sem o círculo branco de fundo */}
+          {/* Brasão renderizado diretamente */}
           <img
             src={brasaoImg}
             alt="Brasão Paróquia"
@@ -64,10 +64,6 @@ export function Login({ onLogin }: LoginProps) {
                 <span>Entrar com Google</span>
               </>
             )}
-          </button>
-
-          <button className="text-[#cfa030] hover:text-[#e0b754] bg-transparent border border-[#cfa030]/30 hover:border-[#cfa030] hover:bg-[#cfa030]/5 rounded-full px-6 py-3 text-xs font-bold transition-all w-full tracking-wide">
-            Dificuldades no acesso? Contrate o suporte
           </button>
         </div>
       </div>
