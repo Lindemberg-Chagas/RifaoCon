@@ -17,7 +17,7 @@ export function Dashboard() {
             <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#cfa030] animate-pulse shadow-[0_0_8px_rgba(207,160,48,0.5)]"></span>
             <span className="text-[#cfa030] font-bold text-sm md:text-base tracking-[0.15em] uppercase mt-0.5">Edição Ativa</span>
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase mb-3 md:mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase mb-3 md:mb-4 text-[#1e3a8a]">
             Rifão de Inverno
           </h2>
           <div className="flex flex-wrap items-center gap-2 md:gap-3 text-sm md:text-base text-white/80 font-medium bg-[#1e3a8a] w-fit px-3 md:px-4 py-2 md:py-2.5 rounded-lg border border-white/20">
@@ -27,8 +27,8 @@ export function Dashboard() {
             <span>30 Agosto, 2026</span>
           </div>
         </div>
-        
-        <div className="flex flex-col items-start md:items-end bg-[#1e3a8a] p-5 md:p-6 rounded-2xl border border-[#cfa030]/50 shadow-lg md:min-w-[300px]">
+
+        <div className="flex flex-col items-start md:items-end bg-[#1e3a8a] p-5 md:p-6 rounded-2xl border border-[#cfa030]/50 shadow-lg md:min-w-[300px] text-white">
           <p className="text-xs md:text-sm font-black text-[#cfa030] uppercase tracking-widest mb-1 md:mb-2 text-left md:text-right w-full">Total Arrecadado</p>
           <div className="flex items-baseline gap-1 md:gap-2 text-left md:text-right w-full justify-start md:justify-end">
             <span className="text-2xl md:text-3xl font-medium text-white/80">R$</span>
@@ -45,7 +45,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Pie Chart Section (Technical Monolith) */}
         <div className="lg:col-span-8 sleek-card p-6 md:p-8 lg:p-10 relative overflow-hidden group border border-[#cfa030]/20 shadow-lg">
-          
+
           <div className="flex justify-between items-start mb-8 md:mb-10">
             <h3 className="text-sm md:text-base font-bold tracking-[0.15em] text-white/60 uppercase">Distribuição do Rifão</h3>
             <div className="bg-[#1e3a8a] text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold border border-white/20 flex flex-col items-end shadow-sm">
@@ -74,7 +74,7 @@ export function Dashboard() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', backgroundColor: '#1e3a8a', color: '#fff' }}
                     itemStyle={{ fontWeight: 'bold' }}
                   />
@@ -82,13 +82,13 @@ export function Dashboard() {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-white mt-2">20k</span>
-                <span className="text-xs md:text-sm font-bold text-white/60 uppercase tracking-[0.1em] mt-1 text-center leading-tight">Total<br className="hidden md:block"/> de Números</span>
+                <span className="text-xs md:text-sm font-bold text-white/60 uppercase tracking-[0.1em] mt-1 text-center leading-tight">Total<br className="hidden md:block" /> de Números</span>
               </div>
             </div>
-            
+
             {/* Legend - Detailed Bento Style */}
             <div className="flex flex-col gap-3 md:gap-4 w-full z-10">
-              
+
               <div className="bg-[#1e3a8a] p-4 rounded-xl border border-[#cfa030]/40 hover:border-[#cfa030] transition-colors shadow-sm cursor-default">
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center gap-3">
@@ -104,7 +104,7 @@ export function Dashboard() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-[#1e3a8a] p-4 rounded-xl border border-white/40 hover:border-white transition-colors shadow-sm cursor-default">
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export function Dashboard() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-[#1e3a8a] p-4 rounded-xl border border-white/10 hover:border-white/30 transition-colors shadow-sm cursor-default">
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center gap-3">
@@ -144,7 +144,7 @@ export function Dashboard() {
         <div className="lg:col-span-4 grid grid-cols-1 gap-4 md:gap-6">
           <button className="flex flex-col items-center justify-center p-6 md:p-8 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] font-black rounded-xl md:rounded-2xl shadow-xl transition-all active:scale-95 group">
             <span className="text-sm md:text-base uppercase tracking-[0.15em] mb-2 font-bold opacity-80">Ação Rápida</span>
-            <span className="text-xl md:text-2xl flex items-center gap-2">Registrar Venda <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform"/></span>
+            <span className="text-xl md:text-2xl flex items-center gap-2">Registrar Venda <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
           </button>
 
           {/* Meta */}
