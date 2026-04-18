@@ -1,60 +1,161 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Package, Banknote, UserPlus, ChevronRight, Calendar, Settings } from 'lucide-react';
+import { Package, ChevronRight, Calendar, Plus, Edit2, Trash2, History } from 'lucide-react';
+import { useState } from 'react';
+
+// Tipagem para a nossa Rifa
+interface Rifa {
+  id: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  collected: number;
+  goal: number;
+  isActive: boolean;
+}
 
 export function Dashboard() {
+  const [rifas, setRifas] = useState<Rifa[]>([
+    { id: 1, name: 'Rifão de Inverno', startDate: '15 Junho, 2026', endDate: '30 Agosto, 2026', collected: 50000, goal: 75000, isActive: true },
+    { id: 2, name: 'Ação de Páscoa', startDate: '01 Março, 2026', endDate: '05 Abril, 2026', collected: 25000, goal: 25000, isActive: false }
+  ]);
+
+  const [activeRifaId, setActiveRifaId] = useState<number>(1);
+  const currentRifa = rifas.find(r => r.id === activeRifaId) || rifas[0];
+
   const chartData = [
     { name: 'Vendidos', value: 10000, color: '#cfa030' },
     { name: 'Com Revendedores', value: 5000, color: '#ffffff' },
     { name: 'Disponíveis', value: 5000, color: '#1e3a8a' }
   ];
 
+  const handleCreateNew = () => {
+    const name = window.prompt('Digite o nome da nova Ação/Rifa:');
+    if (name) {
+      const newRifa: Rifa = {
+        id: Date.now(),
+        name: name,
+        startDate: new Date().toLocaleDateString('pt-BR'),
+        endDate: 'Definir',
+        collected: 0,
+        goal: 50000,
+        isActive: true
+      };
+
+      const updatedRifas = rifas.map(r => ({ ...r, isActive: false }));
+      setRifas([newRifa, ...updatedRifas]);
+      setActiveRifaId(newRifa.id);
+
+      // Rola a página de volta para o topo ao criar
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleEditName = () => {
+    const newName = window.prompt('Editar nome da Rifa:', currentRifa.name);
+    if (newName && newName.trim() !== '') {
+      setRifas(rifas.map(r => r.id === currentRifa.id ? { ...r, name: newName } : r));
+    }
+  };
+
+  const handleDelete = () => {
+    if (rifas.length === 1) {
+      window.alert('Você não pode apagar a única rifa do sistema.');
+      return;
+    }
+
+    const confirm = window.confirm(`Tem certeza que deseja apagar "${currentRifa.name}"? Todo o histórico será perdido.`);
+    if (confirm) {
+      const filtered = rifas.filter(r => r.id !== currentRifa.id);
+      setRifas(filtered);
+      setActiveRifaId(filtered[0].id);
+    }
+  };
+
   return (
     <main className="max-w-6xl mx-auto px-4 md:px-8 pt-28 md:pt-36 pb-32 md:pb-16 w-full text-white">
-      {/* Header Section - Rifão Ativo & Total Arrecadado */}
-      <section className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-start justify-between gap-6">
-        <div>
+
+      {/* Selector de Histórico */}
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {rifas.map(rifa => (
+          <button
+            key={rifa.id}
+            onClick={() => setActiveRifaId(rifa.id)}
+            className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 border ${activeRifaId === rifa.id
+                ? 'bg-[#1e3a8a] text-white border-[#1e3a8a] shadow-md'
+                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+              }`}
+          >
+            {rifa.isActive ? <span className="w-2 h-2 rounded-full bg-[#cfa030] animate-pulse"></span> : <History className="w-3 h-3" />}
+            {rifa.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Header Section - Rifão Ativo & Boas-vindas */}
+      <section className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-start justify-between gap-6 bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="flex-1">
           <div className="flex items-center gap-2.5 mb-2 md:mb-3">
-            <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#cfa030] animate-pulse shadow-[0_0_8px_rgba(207,160,48,0.5)]"></span>
-            <span className="text-[#cfa030] font-bold text-sm md:text-base tracking-[0.15em] uppercase mt-0.5">Edição Ativa</span>
+            <span className={`w-2.5 h-2.5 md:w-3 md:h-3 rounded-full ${currentRifa.isActive ? 'bg-[#cfa030] animate-pulse shadow-[0_0_8px_rgba(207,160,48,0.5)]' : 'bg-slate-400'}`}></span>
+            <span className={`font-bold text-sm md:text-base tracking-[0.15em] uppercase mt-0.5 ${currentRifa.isActive ? 'text-[#cfa030]' : 'text-slate-400'}`}>
+              {currentRifa.isActive ? 'Edição Ativa' : 'Edição Encerrada'}
+            </span>
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase mb-3 md:mb-4 text-[#1e3a8a]">
-            Rifão de Inverno
-          </h2>
-          <div className="flex flex-wrap items-center gap-2 md:gap-3 text-sm md:text-base text-white/80 font-medium bg-[#1e3a8a] w-fit px-3 md:px-4 py-2 md:py-2.5 rounded-lg border border-white/20">
-            <Calendar className="w-4 h-4 md:w-5 md:h-5 text-white" />
-            <span>15 Junho, 2026</span>
+
+          <div className="flex items-center gap-4 mb-3 md:mb-4 group">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase text-[#1e3a8a]">
+              {currentRifa.name}
+            </h2>
+
+            {/* Botões de Ação (Apenas Editar e Apagar) */}
+            <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+              <button onClick={handleEditName} className="p-2 bg-slate-100 hover:bg-slate-200 text-[#1e3a8a] rounded-full transition-colors" title="Editar Nome">
+                <Edit2 className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+              <button onClick={handleDelete} className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-colors" title="Apagar Edição">
+                <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 text-sm md:text-base text-white/90 font-medium bg-[#1e3a8a] w-fit px-3 md:px-4 py-2 md:py-2.5 rounded-lg border border-[#1e3a8a]/20 shadow-sm">
+            <Calendar className="w-4 h-4 md:w-5 md:h-5 text-[#cfa030]" />
+            <span>{currentRifa.startDate}</span>
             <span className="text-white/50 mx-1">—</span>
-            <span>30 Agosto, 2026</span>
+            <span>{currentRifa.endDate}</span>
           </div>
         </div>
 
-        <div className="flex flex-col items-start md:items-end bg-[#1e3a8a] p-5 md:p-6 rounded-2xl border border-[#cfa030]/50 shadow-lg md:min-w-[300px] text-white">
-          <p className="text-xs md:text-sm font-black text-[#cfa030] uppercase tracking-widest mb-1 md:mb-2 text-left md:text-right w-full">Total Arrecadado</p>
-          <div className="flex items-baseline gap-1 md:gap-2 text-left md:text-right w-full justify-start md:justify-end">
-            <span className="text-2xl md:text-3xl font-medium text-white/80">R$</span>
-            <span className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-md">50.0k</span>
+        {/* Card de Boas-vindas */}
+        <div className="flex flex-col items-start justify-center bg-slate-50 p-5 md:p-6 rounded-2xl border border-slate-100 md:min-w-[320px] text-[#1e3a8a]">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-[#1e3a8a] flex items-center justify-center text-white font-bold shadow-md">
+              L
+            </div>
+            <div>
+              <p className="text-xs font-bold text-[#cfa030] uppercase tracking-widest">Painel Administrativo</p>
+              <h3 className="text-lg font-black leading-none">Olá, Lindemberg</h3>
+            </div>
           </div>
-          <div className="text-sm md:text-base text-white/70 font-medium mt-1 text-left md:text-right w-full">R$ 50.000,00</div>
-          <div className="mt-4 md:mt-5 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-            <div className="bg-[#cfa030] h-full w-[66%] rounded-full shadow-[0_0_10px_rgba(207,160,48,0.5)]"></div>
-          </div>
+          <p className="text-sm font-medium text-slate-500 mt-2">
+            Aqui você gerencia a distribuição de blocos e o controle financeiro da paróquia.
+          </p>
         </div>
       </section>
 
       {/* Technical Bento Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Pie Chart Section (Technical Monolith) */}
-        <div className="lg:col-span-8 sleek-card p-6 md:p-8 lg:p-10 relative overflow-hidden group border border-[#cfa030]/20 shadow-lg">
+        {/* Pie Chart Section */}
+        <div className="lg:col-span-8 sleek-card p-6 md:p-8 lg:p-10 relative overflow-hidden group border border-[#cfa030]/20 shadow-lg bg-[#1e3a8a]">
 
           <div className="flex justify-between items-start mb-8 md:mb-10">
-            <h3 className="text-sm md:text-base font-bold tracking-[0.15em] text-white/60 uppercase">Distribuição do Rifão</h3>
-            <div className="bg-[#1e3a8a] text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold border border-white/20 flex flex-col items-end shadow-sm">
+            <h3 className="text-sm md:text-base font-bold tracking-[0.15em] text-white/60 uppercase">Distribuição da Edição</h3>
+            <div className="bg-white/10 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold border border-white/20 flex flex-col items-end shadow-sm">
               <span className="uppercase tracking-wider opacity-80 text-[10px] md:text-xs">Unidade Simples</span>
               <span className="text-lg md:text-2xl font-black text-white">20.000 <span className="text-xs md:text-sm font-bold uppercase opacity-80 font-mono">Números</span></span>
             </div>
           </div>
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-            {/* The Chart - Recharts Donut */}
+            {/* O Gráfico */}
             <div className="relative w-52 h-52 md:w-60 md:h-60 lg:w-72 lg:h-72 flex-shrink-0 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -86,54 +187,33 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* Legend - Detailed Bento Style */}
+            {/* Legenda */}
             <div className="flex flex-col gap-3 md:gap-4 w-full z-10">
-
-              <div className="bg-[#1e3a8a] p-4 rounded-xl border border-[#cfa030]/40 hover:border-[#cfa030] transition-colors shadow-sm cursor-default">
+              <div className="bg-white/5 p-4 rounded-xl border border-[#cfa030]/40 shadow-sm">
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#cfa030] shadow-[0_0_8px_rgba(207,160,48,0.6)] transform scale-125"></div>
+                    <div className="w-3 h-3 rounded-full bg-[#cfa030] shadow-[0_0_8px_rgba(207,160,48,0.6)]"></div>
                     <p className="text-sm md:text-base font-bold text-white uppercase tracking-wide">Vendidos / Pagos</p>
                   </div>
-                  <span className="text-base md:text-lg font-black text-[#cfa030]">50%</span>
-                </div>
-                <div className="pl-6 md:pl-7 flex gap-4 md:gap-6 mt-1">
-                  <div>
-                    <span className="block text-xl md:text-2xl font-black text-white leading-none">10.000</span>
-                    <span className="text-[10px] md:text-xs font-bold text-white/50 uppercase tracking-wider">Números</span>
-                  </div>
+                  <span className="text-base font-black text-[#cfa030]">50%</span>
                 </div>
               </div>
-
-              <div className="bg-[#1e3a8a] p-4 rounded-xl border border-white/40 hover:border-white transition-colors shadow-sm cursor-default">
+              <div className="bg-white/5 p-4 rounded-xl border border-white/40 shadow-sm">
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-white shadow-sm transform scale-125"></div>
+                    <div className="w-3 h-3 rounded-full bg-white shadow-sm"></div>
                     <p className="text-sm md:text-base font-bold text-white uppercase tracking-wide">Com Revendedores</p>
                   </div>
-                  <span className="text-base md:text-lg font-black text-white">25%</span>
-                </div>
-                <div className="pl-6 md:pl-7 flex gap-4 md:gap-6 mt-1">
-                  <div>
-                    <span className="block text-xl md:text-2xl font-black text-white leading-none">5.000</span>
-                    <span className="text-[10px] md:text-xs font-bold text-white/50 uppercase tracking-wider">Números</span>
-                  </div>
+                  <span className="text-base font-black text-white">25%</span>
                 </div>
               </div>
-
-              <div className="bg-[#1e3a8a] p-4 rounded-xl border border-white/10 hover:border-white/30 transition-colors shadow-sm cursor-default">
+              <div className="bg-white/5 p-4 rounded-xl border border-white/10 shadow-sm">
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#1e3a8a] border border-white/50 shadow-sm transform scale-125"></div>
+                    <div className="w-3 h-3 rounded-full bg-[#1e3a8a] border border-white/50"></div>
                     <p className="text-sm md:text-base font-bold text-white/60 uppercase tracking-wide">Disponíveis</p>
                   </div>
-                  <span className="text-base md:text-lg font-black text-white/50">25%</span>
-                </div>
-                <div className="pl-6 md:pl-7 flex gap-4 md:gap-6 mt-1">
-                  <div>
-                    <span className="block text-xl md:text-2xl font-black text-white/70 leading-none">5.000</span>
-                    <span className="text-[10px] md:text-xs font-bold text-white/40 uppercase tracking-wider">Números</span>
-                  </div>
+                  <span className="text-base font-black text-white/50">25%</span>
                 </div>
               </div>
             </div>
@@ -147,19 +227,19 @@ export function Dashboard() {
             <span className="text-xl md:text-2xl flex items-center gap-2">Registrar Venda <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
           </button>
 
-          {/* Meta */}
           <div className="sleek-card p-5 md:p-6 flex flex-col justify-center border-white/10 bg-[#1e3a8a]">
-            <p className="text-xs font-black text-white/50 uppercase tracking-widest mb-2 md:mb-3">Meta da Rifa</p>
+            <p className="text-xs font-black text-white/50 uppercase tracking-widest mb-2">Meta da Rifa</p>
             <div className="flex items-baseline gap-1">
               <span className="text-lg md:text-xl font-medium text-white/60">R$</span>
-              <span className="text-2xl md:text-3xl font-black tracking-tight text-white">75k</span>
+              <span className="text-2xl md:text-3xl font-black tracking-tight text-white">
+                {(currentRifa.goal / 1000).toFixed(0)}k
+              </span>
             </div>
           </div>
 
-          {/* Blocos */}
           <div className="sleek-card p-5 md:p-6 flex flex-col justify-center relative overflow-hidden border-white/10 bg-[#1e3a8a]">
-            <Package className="absolute -right-2 -bottom-2 text-white/5 w-20 h-20 md:w-24 md:h-24 stroke-[1.5]" />
-            <p className="text-xs font-black text-white/50 uppercase tracking-widest mb-2 md:mb-3 relative z-10">Total de Blocos</p>
+            <Package className="absolute -right-2 -bottom-2 text-white/5 w-24 h-24 stroke-[1.5]" />
+            <p className="text-xs font-black text-white/50 uppercase tracking-widest mb-2 relative z-10">Total de Blocos</p>
             <div className="flex items-baseline gap-1 relative z-10">
               <span className="text-2xl md:text-3xl font-black tracking-tight text-white">833</span>
               <span className="text-sm font-medium text-white/60">x</span>
@@ -167,6 +247,20 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Botão de Nova Rifa no final da página */}
+      <div className="mt-12 flex justify-center">
+        <button
+          onClick={handleCreateNew}
+          className="flex items-center gap-3 px-8 py-4 bg-transparent border-2 border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white font-black rounded-full transition-all group shadow-sm hover:shadow-md"
+        >
+          <div className="w-8 h-8 rounded-full bg-[#1e3a8a] group-hover:bg-white flex items-center justify-center transition-colors">
+            <Plus className="w-5 h-5 text-white group-hover:text-[#1e3a8a]" />
+          </div>
+          CRIAR NOVA RIFA
+        </button>
+      </div>
+
     </main>
   );
 }
