@@ -1,9 +1,11 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Package, ChevronRight, Calendar, Menu } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
-export function Dashboard() {
-  const navigate = useNavigate();
+interface DashboardProps {
+  setActiveTab: (tab: string) => void;
+}
+
+export function Dashboard({ setActiveTab }: DashboardProps) {
 
   // Simulando a rifa ativa
   const currentRifa = {
@@ -31,9 +33,9 @@ export function Dashboard() {
     greeting = 'Boa tarde';
   }
 
-  // Função para navegar para o Admin
+  // Função para abrir o painel admin
   const goToAdmin = () => {
-    navigate('/admin'); // Certifique-se de que a rota '/admin' está configurada no seu App.tsx
+    setActiveTab('admin');
   };
 
   return (
@@ -54,7 +56,6 @@ export function Dashboard() {
           className="w-10 h-10 rounded-full border-2 border-[#cfa030] overflow-hidden hover:scale-105 transition-transform shadow-lg focus:outline-none focus:ring-2 focus:ring-white/50"
           title="Abrir Painel Administrativo"
         >
-          {/* Você pode substituir pelo src da foto real ou ícone */}
           <img
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lindemberg&backgroundColor=1e3a8a"
             alt="Perfil do Usuário"
