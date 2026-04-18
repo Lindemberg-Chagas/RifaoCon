@@ -1,13 +1,51 @@
-import { Search, Plus, MessageCircle, MoreHorizontal, Ticket } from 'lucide-react';
+import { Search, Plus, MessageCircle, MoreHorizontal, Ticket, X } from 'lucide-react';
+import { useState } from 'react';
 
 export function Resellers() {
-  const resellersList = [
+  // Transformamos a lista em um estado (State) para podermos adicionar novos itens dinamicamente
+  const [bondososList, setBondososList] = useState([
     { name: 'Anderson Silva', range: '00500 - 00512', status: 'paid', statusLabel: 'Tudo Pago' },
     { name: 'Beatriz Santos', range: '01050 - 01070', status: 'pending', statusLabel: 'Pendente' },
     { name: 'Carlos Eduardo', range: '03110 - 03130', status: 'paid', statusLabel: 'Tudo Pago' },
     { name: 'Daniela Moreira', range: '04000 - 04025', status: 'pending', statusLabel: 'Pendente' },
     { name: 'Fábio Júnior', range: '08900 - 08910', status: 'paid', statusLabel: 'Tudo Pago' },
-  ];
+  ]);
+
+  // Estados para controlar o Modal e o Formulário
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newRangeStart, setNewRangeStart] = useState('');
+  const [newRangeEnd, setNewRangeEnd] = useState('');
+
+  // Função para salvar o novo Bondoso
+  const handleAddBondoso = (e: React.FormEvent) => {
+    e.preventDefault(); // Evita que a página recarregue ao enviar o form
+
+    if (!newName || !newRangeStart || !newRangeEnd) {
+      alert("Por favor, preencha todos os campos.");
+      return;
+    }
+
+    // Formata os números para terem sempre 5 dígitos (ex: 50 -> 00050)
+    const startFormatted = newRangeStart.padStart(5, '0');
+    const endFormatted = newRangeEnd.padStart(5, '0');
+
+    const newBondoso = {
+      name: newName,
+      range: `${startFormatted} - ${endFormatted}`,
+      status: 'pending', // Por padrão, um novo bloco entregue fica como pendente
+      statusLabel: 'Pendente'
+    };
+
+    // Adiciona o novo bondoso no topo da lista
+    setBondososList([newBondoso, ...bondososList]);
+
+    // Limpa o formulário e fecha o modal
+    setNewName('');
+    setNewRangeStart('');
+    setNewRangeEnd('');
+    setIsModalOpen(false);
+  };
 
   return (
     <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 pt-28 md:pt-36 pb-32 md:pb-16 min-h-screen relative text-white">
@@ -20,11 +58,11 @@ export function Resellers() {
         <div className="flex flex-wrap gap-2 md:gap-3">
           <div className="bg-[#1e3a8a] px-4 py-2.5 md:py-3 rounded-xl flex items-center gap-2 shadow-sm border border-white/20">
             <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-white"></span>
-            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-white">Ativos 24</span>
+            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-white">Ativos {bondososList.filter(b => b.status === 'paid').length}</span>
           </div>
           <div className="bg-[#1e3a8a] px-4 py-2.5 md:py-3 rounded-xl flex items-center gap-2 shadow-sm border border-[#cfa030]/50">
             <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#cfa030]"></span>
-            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-[#cfa030]">Pendentes 08</span>
+            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-[#cfa030]">Pendentes {bondososList.filter(b => b.status === 'pending').length}</span>
           </div>
         </div>
       </div>
@@ -54,7 +92,7 @@ export function Resellers() {
           <div className="col-span-2 text-right pr-2">Ações</div>
         </div>
 
-        {resellersList.map((reseller, i) => (
+        {bondososList.map((reseller, i) => (
           <div key={i} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center px-4 md:px-5 py-4 bg-[#1e3a8a] rounded-xl border border-white/20 hover:border-[#cfa030]/50 transition-all shadow-sm group">
 
             <div className="w-full md:col-span-4 flex items-center gap-3 mb-3 md:mb-0">
@@ -95,17 +133,102 @@ export function Resellers() {
 
       {/* Subtle Empty State Tip */}
       <div className="mt-8 md:mt-12 text-center pb-8 md:pb-0">
-        <p className="text-xs md:text-sm font-bold text-white/30 tracking-[0.1em] uppercase">Fim da Lista — 32 Registros</p>
+        <p className="text-xs md:text-sm font-bold text-white/30 tracking-[0.1em] uppercase">Fim da Lista — {bondososList.length} Registros</p>
       </div>
 
       {/* FAB: Floating Action Button */}
       <button
+        onClick={() => setIsModalOpen(true)}
         className="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-14 h-14 md:w-16 md:h-16 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] rounded-2xl md:rounded-full shadow-[0_10px_25px_rgba(207,160,48,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 z-40 border border-[#b58b29]"
         aria-label="Adicionar novo bondoso"
         title="Entregar Novo Bloco"
       >
         <Plus className="w-6 h-6 md:w-8 md:h-8 stroke-[2.5]" />
       </button>
+
+      {/* Modal de Cadastro de Novo Bondoso */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
+            {/* Header do Modal */}
+            <div className="bg-[#1e3a8a] px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-black text-white">Novo Bondoso</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Corpo do Formulário */}
+            <form onSubmit={handleAddBondoso} className="p-6">
+
+              <div className="mb-5">
+                <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
+                  Nome Completo
+                </label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Ex: João da Silva"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div>
+                  <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
+                    Bloco (Início)
+                  </label>
+                  <input
+                    type="number"
+                    value={newRangeStart}
+                    onChange={(e) => setNewRangeStart(e.target.value)}
+                    placeholder="Ex: 500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
+                    Bloco (Fim)
+                  </label>
+                  <input
+                    type="number"
+                    value={newRangeEnd}
+                    onChange={(e) => setNewRangeEnd(e.target.value)}
+                    placeholder="Ex: 520"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Botões do Modal */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] font-black rounded-xl transition-colors shadow-md"
+                >
+                  Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

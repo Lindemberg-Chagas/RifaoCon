@@ -1,157 +1,233 @@
-import { Plus, Edit2, Trash2, LogOut, User, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Search, Plus, MessageCircle, MoreHorizontal, Ticket, X } from 'lucide-react';
 import { useState } from 'react';
 
-interface Rifa {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
-}
-
-interface AdminProps {
-  setActiveTab: (tab: string) => void;
-}
-
-export function Admin({ setActiveTab }: AdminProps) {
-  const [rifas, setRifas] = useState<Rifa[]>([
-    { id: 1, name: 'Rifão de Inverno', startDate: '15 Junho, 2026', endDate: '30 Agosto, 2026', isActive: true },
-    { id: 2, name: 'Ação de Páscoa', startDate: '01 Março, 2026', endDate: '05 Abril, 2026', isActive: false }
+export function Resellers() {
+  // Transformamos a lista em um estado (State) para podermos adicionar novos itens dinamicamente
+  const [bondososList, setBondososList] = useState([
+    { name: 'Anderson Silva', range: '00500 - 00512', status: 'paid', statusLabel: 'Tudo Pago' },
+    { name: 'Beatriz Santos', range: '01050 - 01070', status: 'pending', statusLabel: 'Pendente' },
+    { name: 'Carlos Eduardo', range: '03110 - 03130', status: 'paid', statusLabel: 'Tudo Pago' },
+    { name: 'Daniela Moreira', range: '04000 - 04025', status: 'pending', statusLabel: 'Pendente' },
+    { name: 'Fábio Júnior', range: '08900 - 08910', status: 'paid', statusLabel: 'Tudo Pago' },
   ]);
 
-  const handleCreateNew = () => {
-    const name = window.prompt('Digite o nome da nova Ação/Rifa:');
-    if (name) {
-      const newRifa: Rifa = {
-        id: Date.now(),
-        name: name,
-        startDate: new Date().toLocaleDateString('pt-BR'),
-        endDate: 'Definir',
-        isActive: true
-      };
-      const updatedRifas = rifas.map(r => ({ ...r, isActive: false }));
-      setRifas([newRifa, ...updatedRifas]);
-    }
-  };
+  // Estados para controlar o Modal e o Formulário
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newRangeStart, setNewRangeStart] = useState('');
+  const [newRangeEnd, setNewRangeEnd] = useState('');
 
-  const handleEditName = (id: number, currentName: string) => {
-    const newName = window.prompt('Editar nome da Rifa:', currentName);
-    if (newName && newName.trim() !== '') {
-      setRifas(rifas.map(r => r.id === id ? { ...r, name: newName } : r));
-    }
-  };
+  // Função para salvar o novo Bondoso
+  const handleAddBondoso = (e: React.FormEvent) => {
+    e.preventDefault(); // Evita que a página recarregue ao enviar o form
 
-  const handleDelete = (id: number, name: string) => {
-    if (rifas.length === 1) {
-      window.alert('Você não pode apagar a única rifa do sistema.');
+    if (!newName || !newRangeStart || !newRangeEnd) {
+      alert("Por favor, preencha todos os campos.");
       return;
     }
-    const confirm = window.confirm(`Tem certeza que deseja apagar "${name}"? Todo o histórico será perdido.`);
-    if (confirm) {
-      setRifas(rifas.filter(r => r.id !== id));
-    }
-  };
 
-  const handleActivate = (id: number) => {
-    setRifas(rifas.map(r => ({ ...r, isActive: r.id === id })));
+    // Formata os números para terem sempre 5 dígitos (ex: 50 -> 00050)
+    const startFormatted = newRangeStart.padStart(5, '0');
+    const endFormatted = newRangeEnd.padStart(5, '0');
+
+    const newBondoso = {
+      name: newName,
+      range: `${startFormatted} - ${endFormatted}`,
+      status: 'pending', // Por padrão, um novo bloco entregue fica como pendente
+      statusLabel: 'Pendente'
+    };
+
+    // Adiciona o novo bondoso no topo da lista
+    setBondososList([newBondoso, ...bondososList]);
+
+    // Limpa o formulário e fecha o modal
+    setNewName('');
+    setNewRangeStart('');
+    setNewRangeEnd('');
+    setIsModalOpen(false);
   };
 
   return (
-    <main className="max-w-4xl mx-auto px-4 md:px-8 pt-6 pb-32 md:pb-16 w-full">
-
-      {/* Botão de Voltar */}
-      <button
-        onClick={() => setActiveTab('dashboard')}
-        className="flex items-center gap-2 text-[#1e3a8a] font-bold mb-6 hover:opacity-70 transition-opacity"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        Voltar para o Painel
-      </button>
-
-      {/* Cabeçalho de Perfil */}
-      <div className="bg-[#1e3a8a] rounded-3xl p-6 md:p-8 shadow-lg text-white mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-[#cfa030]/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
-          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-md overflow-hidden">
-            <img
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lindemberg&backgroundColor=1e3a8a"
-              alt="Perfil do Usuário"
-              className="w-full h-full object-cover"
-            />
+    <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 pt-28 md:pt-36 pb-32 md:pb-16 min-h-screen relative text-white">
+      {/* Section Header */}
+      <div className="mb-8 md:mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
+        <div>
+          <span className="text-[#60a5fa] font-label text-xs md:text-sm tracking-[0.15em] uppercase font-bold mb-2 block">Gerenciamento // v2.4</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white">Bondosos</h2>
+        </div>
+        <div className="flex flex-wrap gap-2 md:gap-3">
+          <div className="bg-[#1e3a8a] px-4 py-2.5 md:py-3 rounded-xl flex items-center gap-2 shadow-sm border border-white/20">
+            <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-white"></span>
+            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-white">Ativos {bondososList.filter(b => b.status === 'paid').length}</span>
           </div>
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight mb-1">Lindemberg</h1>
-            <p className="text-[#cfa030] text-sm font-bold uppercase tracking-widest mb-4">Administrador do Sistema</p>
-            <button className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm mx-auto md:mx-0 bg-white/10 px-4 py-2 rounded-full">
-              <LogOut className="w-4 h-4" />
-              Sair da conta
-            </button>
+          <div className="bg-[#1e3a8a] px-4 py-2.5 md:py-3 rounded-xl flex items-center gap-2 shadow-sm border border-[#cfa030]/50">
+            <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#cfa030]"></span>
+            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-[#cfa030]">Pendentes {bondososList.filter(b => b.status === 'pending').length}</span>
           </div>
         </div>
       </div>
 
-      {/* Seção de Gerenciamento de Rifas */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <h2 className="text-xl font-bold text-[#1e3a8a]">Histórico de Ações</h2>
-        <button
-          onClick={handleCreateNew}
-          className="flex items-center justify-center gap-2 bg-[#1e3a8a] hover:bg-[#152a66] text-white px-5 py-2.5 rounded-full font-bold text-sm shadow-md transition-colors w-full md:w-auto"
-        >
-          <Plus className="w-4 h-4 text-[#cfa030]" />
-          Nova Rifa
-        </button>
+      {/* Main Specialized Search Field */}
+      <div className="mb-8 md:mb-10 bg-[#1e3a8a] p-6 md:p-8 rounded-xl shadow-lg border border-white/20">
+        <label className="text-xs md:text-sm font-black text-white/70 uppercase tracking-widest block mb-3">Busca Rápida de Número</label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-4 md:left-5 flex items-center pointer-events-none">
+            <Search className="text-white/50 w-5 h-5 md:w-6 md:h-6" />
+          </div>
+          <input
+            className="w-full bg-[#1e3a8a] border border-white/20 rounded-xl py-4 md:py-5 pl-12 md:pl-16 pr-4 md:pr-6 text-base md:text-lg focus:ring-2 focus:ring-[#cfa030] transition-all duration-200 placeholder:text-white/30 outline-none block font-medium text-white shadow-inner"
+            placeholder="Digite o número (ex: 00508) para checar o bondoso..."
+            type="text"
+          />
+        </div>
       </div>
 
-      {/* Lista de Rifas */}
-      <div className="flex flex-col gap-4">
-        {rifas.map(rifa => (
-          <div key={rifa.id} className={`bg-white rounded-2xl p-5 border shadow-sm transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${rifa.isActive ? 'border-[#1e3a8a]' : 'border-slate-200'}`}>
+      {/* CRM List */}
+      <div className="space-y-3 md:space-y-4">
+        {/* Table Header */}
+        <div className="hidden md:grid grid-cols-12 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-[#cfa030] border-b border-[#cfa030]/20 mb-2">
+          <div className="col-span-4">Nome do Bondoso</div>
+          <div className="col-span-3">Números Alocados</div>
+          <div className="col-span-3 text-left pl-2">Status</div>
+          <div className="col-span-2 text-right pr-2">Ações</div>
+        </div>
 
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                {rifa.isActive ? (
-                  <span className="bg-[#1e3a8a] text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full tracking-wider flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-[#cfa030] rounded-full animate-pulse"></span>
-                    Ativa
-                  </span>
-                ) : (
-                  <span className="bg-slate-100 text-slate-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full tracking-wider">Encerrada</span>
-                )}
+        {bondososList.map((reseller, i) => (
+          <div key={i} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center px-4 md:px-5 py-4 bg-[#1e3a8a] rounded-xl border border-white/20 hover:border-[#cfa030]/50 transition-all shadow-sm group">
+
+            <div className="w-full md:col-span-4 flex items-center gap-3 mb-3 md:mb-0">
+              <div className="w-10 h-10 rounded-full bg-[#1e3a8a] text-white border border-white/30 group-hover:border-[#cfa030]/50 flex items-center justify-center font-bold text-lg shrink-0 transition-colors">
+                {reseller.name.charAt(0)}
               </div>
-              <h3 className={`text-lg font-black ${rifa.isActive ? 'text-[#1e3a8a]' : 'text-slate-600'}`}>{rifa.name}</h3>
-              <p className="text-sm text-slate-500 font-medium">{rifa.startDate} — {rifa.endDate}</p>
+              <p className="font-bold text-base text-white truncate">{reseller.name}</p>
             </div>
 
-            <div className="flex items-center gap-2">
-              {!rifa.isActive && (
-                <button
-                  onClick={() => handleActivate(rifa.id)}
-                  className="p-2.5 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-full transition-colors flex items-center gap-2 md:px-4"
-                  title="Tornar Rifa Ativa"
-                >
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="text-xs font-bold hidden md:inline">Ativar</span>
-                </button>
-              )}
-              <button
-                onClick={() => handleEditName(rifa.id, rifa.name)}
-                className="p-2.5 text-[#1e3a8a] bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
-                title="Editar Nome"
-              >
-                <Edit2 className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => handleDelete(rifa.id, rifa.name)}
-                className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-full transition-colors"
-                title="Apagar Rifa"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+            <div className="w-full md:col-span-3 flex items-center mb-3 md:mb-0">
+              <div className="flex items-center gap-2 bg-[#1e3a8a] border border-white/10 px-3 py-1.5 rounded-lg text-white/80 font-mono text-sm max-w-fit">
+                <Ticket className="w-4 h-4 text-[#cfa030]" />
+                {reseller.range}
+              </div>
             </div>
 
+            <div className="w-full md:col-span-3 flex items-center mb-3 md:mb-0 md:pl-2">
+              <span className={`px-3 py-1.5 text-[10px] md:text-xs font-black uppercase tracking-widest rounded-lg border ${reseller.status === 'paid' ? 'bg-transparent text-white border-white/40' : 'bg-[#cfa030] text-[#1e3a8a] border-[#cfa030]'}`}>
+                {reseller.statusLabel}
+              </span>
+            </div>
+
+            <div className="w-full md:col-span-2 flex justify-end gap-2 border-t border-white/10 md:border-none pt-3 md:pt-0">
+              <button
+                className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 bg-[#1e3a8a] border border-[#cfa030]/30 hover:border-[#cfa030] hover:bg-[#cfa030]/10 text-[#cfa030] rounded-lg transition-all font-bold text-xs uppercase"
+                title="Mensagem no WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="md:hidden">Lembrar</span>
+              </button>
+              <button className="flex items-center justify-center px-2 py-2 bg-[#1e3a8a] border border-white/10 hover:bg-white/10 text-white/70 rounded-lg transition-all" title="Mais opções">
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Subtle Empty State Tip */}
+      <div className="mt-8 md:mt-12 text-center pb-8 md:pb-0">
+        <p className="text-xs md:text-sm font-bold text-white/30 tracking-[0.1em] uppercase">Fim da Lista — {bondososList.length} Registros</p>
+      </div>
+
+      {/* FAB: Floating Action Button */}
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-14 h-14 md:w-16 md:h-16 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] rounded-2xl md:rounded-full shadow-[0_10px_25px_rgba(207,160,48,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 z-40 border border-[#b58b29]"
+        aria-label="Adicionar novo bondoso"
+        title="Entregar Novo Bloco"
+      >
+        <Plus className="w-6 h-6 md:w-8 md:h-8 stroke-[2.5]" />
+      </button>
+
+      {/* Modal de Cadastro de Novo Bondoso */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
+            {/* Header do Modal */}
+            <div className="bg-[#1e3a8a] px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-black text-white">Novo Bondoso</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Corpo do Formulário */}
+            <form onSubmit={handleAddBondoso} className="p-6">
+
+              <div className="mb-5">
+                <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
+                  Nome Completo
+                </label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Ex: João da Silva"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div>
+                  <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
+                    Bloco (Início)
+                  </label>
+                  <input
+                    type="number"
+                    value={newRangeStart}
+                    onChange={(e) => setNewRangeStart(e.target.value)}
+                    placeholder="Ex: 500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
+                    Bloco (Fim)
+                  </label>
+                  <input
+                    type="number"
+                    value={newRangeEnd}
+                    onChange={(e) => setNewRangeEnd(e.target.value)}
+                    placeholder="Ex: 520"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Botões do Modal */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] font-black rounded-xl transition-colors shadow-md"
+                >
+                  Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </main>
   );
