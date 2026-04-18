@@ -20,7 +20,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
   const chartData = [
     { name: 'Vendidos', value: 12000, color: '#cfa030' },
     { name: 'Com Revendedores', value: 5000, color: '#1e3a8a' },
-    { name: 'Disponíveis', value: 3000, color: '#cbd5e1' }
+    { name: 'Disponíveis', value: 3000, color: '#94A3B8' }
   ];
 
   const currentHour = new Date().getHours();
