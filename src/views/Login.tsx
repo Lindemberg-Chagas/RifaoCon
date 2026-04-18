@@ -37,7 +37,7 @@ export function Login({ onLogin }: LoginProps) {
             />
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">RifasCon</h1>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">RifaoCon</h1>
           <p className="text-white/70 text-sm md:text-base font-medium max-w-[280px] leading-relaxed">
             Ação entre Amigos<br />
             <span className="text-[10px] uppercase tracking-[0.2em] opacity-50">Acesso Administrativo</span>
