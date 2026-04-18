@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  --color-secondary-fixed-dim: #cbd5e1;
+  --color-primary: #1e3a8a;
+  --color-on-primary: #ffffff;
+  --color-surface-container-low: #ffffff;
+  --color-on-primary-container: #1e3a8a;
+  --color-on-secondary: #ffffff;
+  --color-on-tertiary-container: #1e3a8a;
+  --color-outline: #e2e8f0;
+  --color-on-tertiary-fixed-variant: #475569;
+  --color-surface-variant: #f8fafc;
+  --color-on-background: #1e3a8a;
+  --color-on-secondary-container: #1e3a8a;
+  --color-on-secondary-fixed-variant: #1e3a8a;
+  --color-surface-dim: #f1f5f9;
+  --color-inverse-surface: #1e3a8a;
+  --color-on-surface-variant: #475569;
+  --color-surface-container-highest: #e2e8f0;
+  --color-primary-fixed-dim: #1e3a8a;
+  --color-surface: #ffffff;
+  --color-on-primary-fixed: #ffffff;
+  --color-surface-container: #f8fafc;
+  --color-inverse-on-surface: #ffffff;
+  --color-tertiary-fixed: #e2e8f0;
+  --color-on-surface: #1e3a8a;
+  --color-error: #ef4444;
+  --color-tertiary-fixed-dim: #cbd5e1;
+  --color-outline-variant: #e2e8f0;
+  --color-surface-container-lowest: #ffffff;
+  --color-secondary-dim: #2563eb;
+  --color-tertiary-container: #e2e8f0;
+  --color-tertiary: #64748b;
+  --color-tertiary-dim: #475569;
+  --color-surface-container-high: #f1f5f9;
+  --color-on-primary-fixed-variant: #1e3a8a;
+  --color-secondary-fixed: #bfdbfe;
+  --color-inverse-primary: #60a5fa;
+  --color-on-secondary-fixed: #1d4ed8;
+  --color-secondary: #2563eb;
+  --color-secondary-container: #e2e8f0;
+  --color-primary-dim: #1e3a8a;
+  --color-on-tertiary-fixed: #334155;
+  --color-primary-container: #bfdbfe;
+  --color-error-container: #fecaca;
+  --color-primary-fixed: #3b82f6;
+  --color-surface-bright: #ffffff;
+  --color-on-tertiary: #ffffff;
+  --color-background: #f8fafc;
+  --color-on-error: #ffffff;
+  --color-surface-tint: #1e3a8a;
+  --color-error-dim: #dc2626;
+  --color-on-error-container: #991b1b;
+
+  --font-headline: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-label: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body { font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; background-color: #1e3a8a; color: #ffffff; }
+
+/* Dashboard Donut container will use Recharts, but keep this if needed for Fallbacks */
+.pie-chart-conic {
+  background: conic-gradient(
+      #cfa030 0% 50%,
+      #ffffff 50% 75%,
+      #1e3a8a 75% 100%
+  );
+}
+
+/* Card overrides for Sleek theme */
+.sleek-card {
+  background: #1e3a8a;
+  border-radius: 12px;
+  box-shadow: none;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+}
+
+.sleek-btn {
+  background: var(--color-primary);
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  border: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
