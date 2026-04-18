@@ -1,26 +1,17 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Package, ChevronRight, Calendar, Plus, Edit2, Trash2, History } from 'lucide-react';
-import { useState } from 'react';
-
-// Tipagem para a nossa Rifa
-interface Rifa {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-  collected: number;
-  goal: number;
-  isActive: boolean;
-}
+import { Package, ChevronRight, Calendar } from 'lucide-react';
 
 export function Dashboard() {
-  const [rifas, setRifas] = useState<Rifa[]>([
-    { id: 1, name: 'Rifão de Inverno', startDate: '15 Junho, 2026', endDate: '30 Agosto, 2026', collected: 50000, goal: 75000, isActive: true },
-    { id: 2, name: 'Ação de Páscoa', startDate: '01 Março, 2026', endDate: '05 Abril, 2026', collected: 25000, goal: 25000, isActive: false }
-  ]);
-
-  const [activeRifaId, setActiveRifaId] = useState<number>(1);
-  const currentRifa = rifas.find(r => r.id === activeRifaId) || rifas[0];
+  // Simulando a rifa ativa que virá do contexto/banco de dados no futuro
+  const currentRifa = {
+    id: 1,
+    name: 'Rifão de Inverno',
+    startDate: '15 Junho, 2026',
+    endDate: '30 Agosto, 2026',
+    collected: 50000,
+    goal: 75000,
+    isActive: true
+  };
 
   const chartData = [
     { name: 'Vendidos', value: 10000, color: '#cfa030' },
@@ -37,47 +28,6 @@ export function Dashboard() {
     greeting = 'Boa tarde';
   }
 
-  const handleCreateNew = () => {
-    const name = window.prompt('Digite o nome da nova Ação/Rifa:');
-    if (name) {
-      const newRifa: Rifa = {
-        id: Date.now(),
-        name: name,
-        startDate: new Date().toLocaleDateString('pt-BR'),
-        endDate: 'Definir',
-        collected: 0,
-        goal: 50000,
-        isActive: true
-      };
-
-      const updatedRifas = rifas.map(r => ({ ...r, isActive: false }));
-      setRifas([newRifa, ...updatedRifas]);
-      setActiveRifaId(newRifa.id);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleEditName = () => {
-    const newName = window.prompt('Editar nome da Rifa:', currentRifa.name);
-    if (newName && newName.trim() !== '') {
-      setRifas(rifas.map(r => r.id === currentRifa.id ? { ...r, name: newName } : r));
-    }
-  };
-
-  const handleDelete = () => {
-    if (rifas.length === 1) {
-      window.alert('Você não pode apagar a única rifa do sistema.');
-      return;
-    }
-
-    const confirm = window.confirm(`Tem certeza que deseja apagar "${currentRifa.name}"? Todo o histórico será perdido.`);
-    if (confirm) {
-      const filtered = rifas.filter(r => r.id !== currentRifa.id);
-      setRifas(filtered);
-      setActiveRifaId(filtered[0].id);
-    }
-  };
-
   return (
     <main className="max-w-6xl mx-auto px-4 md:px-8 pt-20 md:pt-28 pb-32 md:pb-16 w-full text-white">
 
@@ -86,23 +36,6 @@ export function Dashboard() {
         <h1 className="text-2xl md:text-3xl font-black text-[#1e3a8a] tracking-tight">
           Olá, Lindemberg. <span className="text-[#cfa030] font-medium">{greeting}!</span>
         </h1>
-      </div>
-
-      {/* Selector de Histórico */}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-slate-200/60 pb-4">
-        {rifas.map(rifa => (
-          <button
-            key={rifa.id}
-            onClick={() => setActiveRifaId(rifa.id)}
-            className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 border ${activeRifaId === rifa.id
-                ? 'bg-[#1e3a8a] text-white border-[#1e3a8a] shadow-md'
-                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-              }`}
-          >
-            {rifa.isActive ? <span className="w-2 h-2 rounded-full bg-[#cfa030] animate-pulse"></span> : <History className="w-3 h-3" />}
-            {rifa.name}
-          </button>
-        ))}
       </div>
 
       {/* Header Section - Apenas Informações da Rifa */}
@@ -114,19 +47,10 @@ export function Dashboard() {
           </span>
         </div>
 
-        <div className="flex items-center gap-4 mb-3 md:mb-4 group w-full">
+        <div className="flex items-center gap-4 mb-3 md:mb-4 w-full">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase text-[#1e3a8a] truncate">
             {currentRifa.name}
           </h2>
-
-          <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity ml-auto">
-            <button onClick={handleEditName} className="p-2 bg-slate-100 hover:bg-slate-200 text-[#1e3a8a] rounded-full transition-colors" title="Editar Nome">
-              <Edit2 className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
-            <button onClick={handleDelete} className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-colors" title="Apagar Edição">
-              <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
-          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 md:gap-3 text-sm md:text-base text-white/90 font-medium bg-[#1e3a8a] w-fit px-3 md:px-4 py-2 md:py-2.5 rounded-lg border border-[#1e3a8a]/20 shadow-sm">
@@ -242,20 +166,6 @@ export function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* Botão de Nova Rifa no final da página */}
-      <div className="mt-12 flex justify-center">
-        <button
-          onClick={handleCreateNew}
-          className="flex items-center gap-3 px-8 py-4 bg-transparent border-2 border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white font-black rounded-full transition-all group shadow-sm hover:shadow-md"
-        >
-          <div className="w-8 h-8 rounded-full bg-[#1e3a8a] group-hover:bg-white flex items-center justify-center transition-colors">
-            <Plus className="w-5 h-5 text-white group-hover:text-[#1e3a8a]" />
-          </div>
-          CRIAR NOVA RIFA
-        </button>
-      </div>
-
     </main>
   );
 }
