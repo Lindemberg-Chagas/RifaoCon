@@ -1,7 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-// Certifique-se de que o caminho da imagem do brasão está correto para a sua estrutura
-import brasaoImg from '../assets/brasao-paroquia.png';
+
 
 interface LoginProps {
   onLogin: () => void;
