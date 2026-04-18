@@ -18,7 +18,7 @@ export function Resellers() {
   const [newRangeStart, setNewRangeStart] = useState('');
 
   // CONFIGURAÇÃO: Quantos números tem em 1 bloco impresso?
-  const NUMEROS_POR_BLOCO = 25;
+  const NUMEROS_POR_BLOCO = 12; // <-- Alterado para 12
 
   const handleAddBondoso = (e: React.FormEvent) => {
     e.preventDefault();
