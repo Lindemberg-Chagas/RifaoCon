@@ -84,7 +84,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
           </div>
 
           <div className="flex items-center gap-4 mb-3 md:mb-4 w-full">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase text-[#1e3a8a] truncate">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase text-[#1e3a8a] break-words hyphens-auto w-full">
               {currentRifa.name}
             </h2>
           </div>
