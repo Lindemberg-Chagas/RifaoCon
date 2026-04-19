@@ -1,49 +1,48 @@
-import { Search, Plus, MessageCircle, MoreHorizontal, Ticket, X } from 'lucide-react';
+import { Search, Plus, MessageCircle, Ticket, X, CheckCircle2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase'; // Importando a conexão com o banco!
+import { supabase } from '../lib/supabase';
 
 export function Resellers() {
-  // Agora a lista começa vazia, pois virá do banco
   const [bondososList, setBondososList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Estados do Modal de Cadastro
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newBlockCount, setNewBlockCount] = useState('');
   const [newRangeStart, setNewRangeStart] = useState('');
 
+  // Estados do Modal de Prestação de Contas
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [selectedBondoso, setSelectedBondoso] = useState<any>(null);
+  const [soldTickets, setSoldTickets] = useState('');
+  const [collectedAmount, setCollectedAmount] = useState('');
+
   const NUMEROS_POR_BLOCO = 12;
 
-  // Carrega os dados do Supabase assim que a tela abre
   useEffect(() => {
     fetchBondosos();
   }, []);
 
   const fetchBondosos = async () => {
     setIsLoading(true);
-    // Busca na tabela 'bondosos' ordenando pelos mais recentes
     const { data, error } = await supabase
       .from('bondosos')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error("Erro ao buscar dados:", error);
-    } else {
-      setBondososList(data || []);
-    }
+    if (error) console.error("Erro ao buscar dados:", error);
+    else setBondososList(data || []);
     setIsLoading(false);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 11) value = value.slice(0, 11);
-
     let formattedValue = value;
     if (value.length > 2) formattedValue = `(${value.slice(0, 2)}) ${value.slice(2)}`;
     if (value.length > 7) formattedValue = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
-
     setNewPhone(formattedValue);
   };
 
@@ -57,45 +56,79 @@ export function Resellers() {
     }
 
     if (phoneDigits.length < 10) {
-      alert("Por favor, insira um número de WhatsApp válido com DDD.");
+      alert("Por favor, insira um número válido com DDD.");
       return;
     }
 
     const startNum = parseInt(newRangeStart, 10);
     const blocks = parseInt(newBlockCount, 10);
     const endNum = startNum + (blocks * NUMEROS_POR_BLOCO) - 1;
-
     const startFormatted = String(startNum).padStart(5, '0');
     const endFormatted = String(endNum).padStart(5, '0');
 
-    // Objeto formatado para o Supabase (nomes batem com a tabela criada)
     const newBondoso = {
       name: newName,
       phone: phoneDigits,
       range: `${startFormatted} - ${endFormatted}`,
       status: 'pending',
-      status_label: 'Pendente'
+      status_label: 'Pendente',
+      sold_tickets: 0,
+      collected_amount: 0
     };
 
-    // Salvando no Banco de Dados Real!
-    const { data, error } = await supabase
-      .from('bondosos')
-      .insert([newBondoso])
-      .select();
+    const { data, error } = await supabase.from('bondosos').insert([newBondoso]).select();
 
     if (error) {
       console.error("Erro ao salvar:", error);
       alert("Erro ao salvar no banco de dados.");
     } else if (data) {
-      // Adiciona o novo registro salvo no topo da lista na tela
       setBondososList([data[0], ...bondososList]);
-
-      // Limpa os campos
-      setNewName('');
-      setNewPhone('');
-      setNewBlockCount('');
-      setNewRangeStart('');
+      setNewName(''); setNewPhone(''); setNewBlockCount(''); setNewRangeStart('');
       setIsModalOpen(false);
+    }
+  };
+
+  // --- FUNÇÕES DA PRESTAÇÃO DE CONTAS ---
+
+  const openAccountability = (bondoso: any) => {
+    setSelectedBondoso(bondoso);
+    setSoldTickets('');
+    setCollectedAmount('');
+    setIsAccountModalOpen(true);
+  };
+
+  const handleAccountabilitySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!soldTickets || !collectedAmount) {
+      alert("Preencha a quantidade vendida e o valor recebido.");
+      return;
+    }
+
+    const sold = parseInt(soldTickets, 10);
+    const amount = parseFloat(collectedAmount.replace(',', '.')); // Aceita vírgula ou ponto
+
+    // Vamos considerar que se ele prestou contas, está "Pago". 
+    // Você pode mudar essa lógica depois se quiser ter status "Parcial".
+    const { data, error } = await supabase
+      .from('bondosos')
+      .update({
+        status: 'paid',
+        status_label: 'Tudo Pago',
+        sold_tickets: sold,
+        collected_amount: amount
+      })
+      .eq('id', selectedBondoso.id)
+      .select();
+
+    if (error) {
+      console.error("Erro ao atualizar:", error);
+      alert("Erro ao salvar a prestação de contas.");
+    } else if (data) {
+      // Atualiza a lista na tela sem precisar recarregar a página
+      setBondososList(bondososList.map(b => b.id === selectedBondoso.id ? data[0] : b));
+      setIsAccountModalOpen(false);
+      setSelectedBondoso(null);
     }
   };
 
@@ -147,7 +180,6 @@ export function Resellers() {
           <div className="col-span-2 text-right pr-2">Ações</div>
         </div>
 
-        {/* Loading state enquanto busca do Supabase */}
         {isLoading ? (
           <div className="text-center py-10">
             <div className="animate-spin w-8 h-8 border-4 border-[#cfa030] border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -165,7 +197,15 @@ export function Resellers() {
                 <div className="w-10 h-10 rounded-full bg-[#1e3a8a] text-white border border-white/30 group-hover:border-[#cfa030]/50 flex items-center justify-center font-bold text-lg shrink-0 transition-colors uppercase">
                   {reseller.name.charAt(0)}
                 </div>
-                <p className="font-bold text-base text-white truncate">{reseller.name}</p>
+                <div className="flex flex-col">
+                  <p className="font-bold text-base text-white truncate">{reseller.name}</p>
+                  {/* Se já pagou, mostra quantos vendeu */}
+                  {reseller.status === 'paid' && reseller.sold_tickets > 0 && (
+                    <span className="text-[10px] text-[#cfa030] font-black uppercase tracking-widest">
+                      Vendeu {reseller.sold_tickets} núm.
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="w-full md:col-span-3 flex items-center mb-3 md:mb-0">
@@ -188,19 +228,22 @@ export function Resellers() {
                   title="Mensagem no WhatsApp"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  <span className="md:hidden">Lembrar</span>
                 </button>
-                <button className="flex items-center justify-center px-2 py-2 bg-[#1e3a8a] border border-white/10 hover:bg-white/10 text-white/70 rounded-lg transition-all" title="Mais opções">
-                  <MoreHorizontal className="w-5 h-5" />
-                </button>
+
+                {/* Botão de Prestar Contas aparece se estiver pendente */}
+                {reseller.status === 'pending' && (
+                  <button
+                    onClick={() => openAccountability(reseller)}
+                    className="flex items-center justify-center px-3 py-2 bg-emerald-600/20 border border-emerald-500/50 hover:bg-emerald-500 hover:text-white text-emerald-400 rounded-lg transition-all"
+                    title="Prestar Contas"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                  </button>
+                )}
               </div>
             </div>
           ))
         )}
-      </div>
-
-      <div className="mt-8 md:mt-12 text-center pb-8 md:pb-0">
-        <p className="text-xs md:text-sm font-bold text-white/30 tracking-[0.1em] uppercase">Fim da Lista — {bondososList.length} Registros</p>
       </div>
 
       <button
@@ -211,85 +254,110 @@ export function Resellers() {
         <Plus className="w-6 h-6 md:w-8 md:h-8 stroke-[2.5]" />
       </button>
 
+      {/* --- MODAL 1: CADASTRAR NOVO BONDOSO --- */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
             <div className="bg-[#1e3a8a] px-6 py-4 flex items-center justify-between">
               <h3 className="text-xl font-black text-white">Novo Bondoso</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-white/70 hover:text-white transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
-
             <form onSubmit={handleAddBondoso} className="p-6">
               <div className="mb-4">
                 <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">Nome Completo</label>
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Ex: João da Silva"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
-                  required
-                />
+                <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ex: João da Silva" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all" required />
               </div>
-
               <div className="mb-5">
                 <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">WhatsApp</label>
-                <input
-                  type="tel"
-                  value={newPhone}
-                  onChange={handlePhoneChange}
-                  placeholder="Ex: (85) 99999-9999"
-                  maxLength={15}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
-                  required
-                />
+                <input type="tel" value={newPhone} onChange={handlePhoneChange} placeholder="Ex: (85) 99999-9999" maxLength={15} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all" required />
               </div>
-
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div>
                   <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">Qtd. de Blocos</label>
-                  <input
-                    type="number"
-                    value={newBlockCount}
-                    onChange={(e) => setNewBlockCount(e.target.value)}
-                    placeholder="Ex: 2"
-                    min="1"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
-                    required
-                  />
+                  <input type="number" value={newBlockCount} onChange={(e) => setNewBlockCount(e.target.value)} placeholder="Ex: 2" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all" required />
                 </div>
                 <div>
                   <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">Número Inicial</label>
-                  <input
-                    type="number"
-                    value={newRangeStart}
-                    onChange={(e) => setNewRangeStart(e.target.value)}
-                    placeholder="Ex: 500"
-                    min="0"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
-                    required
-                  />
+                  <input type="number" value={newRangeStart} onChange={(e) => setNewRangeStart(e.target.value)} placeholder="Ex: 500" min="0" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all" required />
                 </div>
               </div>
-
               <div className="mb-8 bg-slate-100 rounded-xl py-3 px-4 flex items-center justify-between border border-slate-200 border-dashed">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Faixa Gerada</span>
                 <span className="text-[#1e3a8a] font-mono font-black text-sm">{previewText}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors">Cancelar</button>
+                <button type="submit" className="flex-1 px-4 py-3 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] font-black rounded-xl transition-colors shadow-md">Salvar Bondoso</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL 2: PRESTAÇÃO DE CONTAS --- */}
+      {isAccountModalOpen && selectedBondoso && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-emerald-600 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-black text-white">Prestação de Contas</h3>
+              <button onClick={() => setIsAccountModalOpen(false)} className="text-white/70 hover:text-white transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 pb-2 border-b border-slate-100">
+              <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-1">Revendedor</p>
+              <p className="text-2xl font-black text-[#1e3a8a]">{selectedBondoso.name}</p>
+              <p className="text-sm font-mono text-slate-500 mt-1">Bloco: {selectedBondoso.range}</p>
+            </div>
+
+            <form onSubmit={handleAccountabilitySubmit} className="p-6">
+              <div className="mb-4">
+                <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
+                  Qtd. de Números Vendidos
+                </label>
+                <input
+                  type="number"
+                  value={soldTickets}
+                  onChange={(e) => setSoldTickets(e.target.value)}
+                  placeholder="Ex: 12"
+                  min="0"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                  required
+                />
+              </div>
+
+              <div className="mb-8">
+                <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
+                  Valor Total Recebido (R$)
+                </label>
+                <input
+                  type="text"
+                  value={collectedAmount}
+                  onChange={(e) => setCollectedAmount(e.target.value)}
+                  placeholder="Ex: 120.00"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                  required
+                />
               </div>
 
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => setIsAccountModalOpen(false)}
                   className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors"
-                >Cancelar</button>
+                >
+                  Cancelar
+                </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] font-black rounded-xl transition-colors shadow-md"
-                >Salvar Bondoso</button>
+                  className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl transition-colors shadow-md flex justify-center items-center gap-2"
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                  Confirmar Baixa
+                </button>
               </div>
             </form>
           </div>
