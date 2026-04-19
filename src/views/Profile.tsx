@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { LogOut, Mail, Shield, Bell, Moon } from 'lucide-react';
+import { LogOut, Mail, Shield, FileText, PlusCircle, Layout } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export function Profile() {
   const [user, setUser] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     async function getUserData() {
@@ -13,94 +16,125 @@ export function Profile() {
     getUserData();
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.reload();
+  // --- FUNCIONALIDADE 1: GERAR PDF ---
+  const generateReport = async () => {
+    setIsGenerating(true);
+    const { data: bondosos } = await supabase.from('bondosos').select('*').order('name');
+
+    if (!bondosos) return;
+
+    const doc = new jsPDF();
+    const date = new Date().toLocaleDateString('pt-BR');
+
+    // Cabeçalho do PDF
+    doc.setFontSize(20);
+    doc.setTextColor(30, 58, 138); // Azul do App
+    doc.text('Relatório Geral - Rifas Vendidas', 14, 22);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Gerado em: ${date}`, 14, 30);
+
+    // Tabela de Dados
+    const tableRows = bondosos.map(b => [
+      b.name,
+      b.range,
+      b.status_label,
+      b.sold_tickets || 0,
+      `R$ ${b.collected_amount?.toFixed(2) || '0,00'}`
+    ]);
+
+    autoTable(doc, {
+      startY: 35,
+      head: [['Bondoso', 'Faixa de Números', 'Status', 'Vendidos', 'Valor']],
+      body: tableRows,
+      headStyles: { fillColor: [30, 58, 138] },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+    });
+
+    doc.save(`Relatorio_Rifas_${date.replace(/\//g, '-')}.pdf`);
+    setIsGenerating(false);
+  };
+
+  // --- FUNCIONALIDADE 2: NOVA RIFA (MODELO) ---
+  const handleNewCampaign = () => {
+    const confirm = window.confirm(
+      "Deseja iniciar uma nova campanha? Isso arquivará os dados atuais para começar do zero."
+    );
+    if (confirm) {
+      // Aqui você poderia chamar uma função para limpar a tabela 'bondosos'
+      // ou criar uma nova entrada na tabela 'campanhas'
+      alert("Funcionalidade de Banco de Dados: Configure uma nova tabela 'campanhas' no Supabase para gerenciar múltiplos modelos!");
+    }
   };
 
   if (!user) return null;
 
   return (
-    <main className="flex-1 w-full max-w-2xl mx-auto px-4 md:px-5 pt-10 md:pt-20 pb-40 min-h-screen">
-
-      {/* Área do Avatar e Nome - Ajustada para não flutuar textos soltos */}
-      <div className="flex flex-col items-center mb-8 md:mb-12 animate-in fade-in duration-700">
+    <main className="flex-1 w-full max-w-2xl mx-auto px-5 pt-10 pb-40 min-h-screen">
+      <div className="flex flex-col items-center mb-12">
         <div className="relative">
-          <img
-            src={user.user_metadata.avatar_url}
-            alt="Avatar"
-            className="w-28 h-28 md:w-40 md:h-40 rounded-full border-4 md:border-8 border-[#cfa030] shadow-2xl"
-          />
-          <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-emerald-500 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 md:border-4 border-white" />
+          <img src={user.user_metadata.avatar_url} className="w-32 h-32 rounded-full border-8 border-[#cfa030] shadow-2xl" alt="Avatar" />
         </div>
-
-        <h2 className="mt-6 md:mt-8 text-2xl md:text-4xl font-black tracking-tight text-[#1e3a8a] text-center px-4">
-          {user.user_metadata.full_name}
-        </h2>
-        <p className="text-[#cfa030] font-black uppercase tracking-[0.2em] text-[10px] md:text-sm mt-2">
-          Administrador // Rifas Vendidas
-        </p>
+        <h2 className="mt-6 text-3xl font-black text-[#1e3a8a] text-center">{user.user_metadata.full_name}</h2>
+        <p className="text-[#cfa030] font-black uppercase tracking-widest text-[10px]">Administrador Master</p>
       </div>
 
-      <div className="space-y-4 md:space-y-6">
-        {/* Card de Identidade - Ajustado para e-mails longos */}
-        <div className="bg-[#5e85f0] p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl text-white">
-          <h3 className="text-white/40 text-[10px] md:text-xs font-black uppercase tracking-widest mb-6 md:mb-8">Meus Dados</h3>
-          <div className="space-y-6 md:space-y-8">
-            <div className="flex items-center gap-4 md:gap-6">
-              <div className="p-3 md:p-4 bg-white/10 rounded-xl md:rounded-2xl text-[#cfa030] shrink-0">
-                <Mail className="w-5 h-5 md:w-7 md:h-7" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[9px] md:text-xs font-black uppercase tracking-widest text-white/40">E-mail Principal</p>
-                {/* break-all impede que o e-mail saia do card */}
-                <p className="text-sm md:text-xl font-bold break-all">{user.email}</p>
-              </div>
+      <div className="space-y-6">
+        {/* Card de Identidade Digital */}
+        <div className="bg-[#5e85f0] p-6 rounded-[2.5rem] shadow-xl text-white">
+          <h3 className="text-white/40 text-[10px] font-black uppercase mb-6">Identidade</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Mail className="w-5 h-5 text-[#cfa030]" />
+              <span className="font-bold text-sm truncate">{user.email}</span>
             </div>
-            <div className="flex items-center gap-4 md:gap-6">
-              <div className="p-3 md:p-4 bg-white/10 rounded-xl md:rounded-2xl text-[#cfa030] shrink-0">
-                <Shield className="w-5 h-5 md:w-7 md:h-7" />
-              </div>
-              <div>
-                <p className="text-[9px] md:text-xs font-black uppercase tracking-widest text-white/40">Nível de Acesso</p>
-                <p className="text-sm md:text-xl font-bold text-white uppercase">Total (Super Admin)</p>
-              </div>
+            <div className="flex items-center gap-4">
+              <Shield className="w-5 h-5 text-[#cfa030]" />
+              <span className="font-bold text-sm uppercase">Acesso Total (DevOps)</span>
             </div>
           </div>
         </div>
 
-        {/* Card de Preferências - Otimizado para Mobile */}
-        <div className="bg-[#5e85f0] p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl text-white">
-          <h3 className="text-white/40 text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 md:mb-4">Configurações</h3>
-          <div className="space-y-1 md:space-y-2">
-            <div className="flex items-center justify-between p-3 md:p-5 hover:bg-white/5 rounded-2xl transition-colors group">
-              <div className="flex items-center gap-4 md:gap-5">
-                <Bell className="w-5 h-5 md:w-6 md:h-6 text-white/60 group-hover:text-white" />
-                <span className="text-sm md:text-lg font-bold">Notificações</span>
+        {/* MUDANÇA AQUI: GESTÃO DO SISTEMA NO LUGAR DE CONFIGURAÇÕES */}
+        <div className="bg-[#5e85f0] p-6 rounded-[3rem] shadow-xl text-white">
+          <h3 className="text-white/40 text-[10px] font-black uppercase mb-6 tracking-widest text-center">Gestão do Sistema</h3>
+
+          <div className="grid grid-cols-1 gap-4">
+            {/* Botão Nova Rifa */}
+            <button
+              onClick={handleNewCampaign}
+              className="flex items-center justify-between p-5 bg-white/10 hover:bg-white/20 rounded-3xl transition-all group border border-white/5"
+            >
+              <div className="flex items-center gap-4">
+                <PlusCircle className="w-6 h-6 text-[#cfa030]" />
+                <span className="font-black uppercase text-xs tracking-tighter">Criar Nova Rifa</span>
               </div>
-              <div className="w-10 h-6 md:w-12 md:h-7 bg-[#cfa030] rounded-full relative shrink-0">
-                <div className="absolute right-1 top-1 bg-[#1e3a8a] w-4 h-4 md:w-5 md:h-5 rounded-full" />
+              <Layout className="w-4 h-4 opacity-30" />
+            </button>
+
+            {/* Botão Relatório PDF */}
+            <button
+              onClick={generateReport}
+              disabled={isGenerating}
+              className="flex items-center justify-between p-5 bg-white/10 hover:bg-white/20 rounded-3xl transition-all group border border-white/5"
+            >
+              <div className="flex items-center gap-4">
+                <FileText className="w-6 h-6 text-[#cfa030]" />
+                <span className="font-black uppercase text-xs tracking-tighter">
+                  {isGenerating ? "Gerando..." : "Exportar PDF Geral"}
+                </span>
               </div>
-            </div>
-            <div className="flex items-center justify-between p-3 md:p-5 hover:bg-white/5 rounded-2xl transition-colors group">
-              <div className="flex items-center gap-4 md:gap-5">
-                <Moon className="w-5 h-5 md:w-6 md:h-6 text-white/60 group-hover:text-white" />
-                <span className="text-sm md:text-lg font-bold">Modo Escuro</span>
-              </div>
-              <div className="w-10 h-6 md:w-12 md:h-7 bg-white/10 rounded-full relative shrink-0">
-                <div className="absolute left-1 top-1 bg-white/40 w-4 h-4 md:w-5 md:h-5 rounded-full" />
-              </div>
-            </div>
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+            </button>
           </div>
         </div>
 
-        {/* Botão de Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-3 md:gap-4 p-6 md:p-8 bg-red-500/10 border border-red-500/20 text-red-500 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all duration-300 shadow-sm text-xs md:text-base"
+          className="w-full flex items-center justify-center gap-4 p-6 bg-red-500/10 border-2 border-red-500/20 text-red-500 rounded-[2.5rem] font-black uppercase text-xs tracking-widest hover:bg-red-500 hover:text-white transition-all"
         >
-          <LogOut className="w-6 h-6 md:w-8 md:h-8" />
-          Sair do Sistema
+          <LogOut className="w-6 h-6" />
+          Encerrar Sessão
         </button>
       </div>
     </main>
