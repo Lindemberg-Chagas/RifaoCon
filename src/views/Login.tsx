@@ -34,14 +34,14 @@ export function Login() {
 
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm mx-auto z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-        {/* Branding - RifaoCon */}
+        {/* Branding - RIFAS VENDIDAS */}
         <div className="flex flex-col items-center text-center mb-10">
           <img
             src="/brasao-paroquia.png"
             alt="Brasão Paróquia"
             className="w-32 h-32 md:w-36 md:h-36 object-contain mb-6 drop-shadow-xl z-10"
           />
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">RifaoCon</h1>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">RIFAS VENDIDAS</h1>
           <p className="text-white/70 text-sm md:text-base font-medium max-w-[280px] leading-relaxed">
             Ação entre Amigos<br />
             <span className="text-[10px] uppercase tracking-[0.2em] opacity-50">Acesso Administrativo</span>
