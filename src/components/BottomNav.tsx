@@ -6,15 +6,14 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
-  // Definimos as 3 abas principais: Geral, Bondosos e Perfil
   const tabs = [
-    { id: 'dashboard', label: 'Geral', icon: LayoutGrid },
+    { id: 'dashboard', label: 'Início', icon: LayoutGrid },
     { id: 'resellers', label: 'Bondosos', icon: Users },
-    { id: 'profile', label: 'Perfil', icon: User },
+    { id: 'profile', label: 'Meu Perfil', icon: User },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[#1e3a8a] border-t border-white/10 px-4 py-3 flex items-center justify-around z-50 backdrop-blur-md pb-6 md:pb-4">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[#1e3a8a] border-t-2 border-white/5 px-4 pt-5 pb-10 flex items-center justify-around z-50 backdrop-blur-md">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -23,17 +22,19 @@ export function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center gap-1 transition-all duration-300 relative min-w-[80px] ${isActive ? 'text-[#cfa030] scale-110' : 'text-white/40 hover:text-white/60'
+            className={`flex flex-col items-center gap-2 transition-all duration-300 relative min-w-[100px] ${isActive ? 'text-[#cfa030] scale-110' : 'text-white/40 hover:text-white/60'
               }`}
           >
-            <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
-            <span className="text-[10px] font-black uppercase tracking-widest">
+            {/* Ícones ligeiramente maiores para facilitar identificação */}
+            <Icon className={`w-8 h-8 ${isActive ? 'stroke-[2.8px]' : 'stroke-[2px]'}`} />
+
+            {/* TEXTO AUMENTADO EM 10% (de 13px para 15px) */}
+            <span className="text-[15px] font-black uppercase tracking-wider">
               {tab.label}
             </span>
 
-            {/* Indicador visual de aba ativa */}
             {isActive && (
-              <div className="absolute -bottom-2 w-1.5 h-1.5 bg-[#cfa030] rounded-full shadow-[0_0_10px_#cfa030]" />
+              <div className="absolute -bottom-3 w-2.5 h-2.5 bg-[#cfa030] rounded-full shadow-[0_0_15px_#cfa030]" />
             )}
           </button>
         );
