@@ -44,10 +44,12 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
   }, { vendidos: 0, pendentes: 0, apurado: 0, ranking: new Map() });
 
   const disponiveis = Math.max(0, TOTAL_NUMEROS - stats.vendidos - stats.pendentes);
+
+  // Cores do gráfico ajustadas para o novo esquema
   const chartData = [
     { name: 'VENDIDOS', value: stats.vendidos, color: '#cfa030' },
     { name: 'COM REVENDEDORES', value: stats.pendentes, color: '#ffffff' },
-    { name: 'DISPONÍVEIS', value: disponiveis, color: '#0f172a' }
+    { name: 'DISPONÍVEIS', value: disponiveis, color: '#1e3a8a' } // Azul escuro para contraste interno
   ];
 
   const topSellers = Array.from(stats.ranking.entries())
@@ -61,7 +63,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
   return (
     <main className="flex-1 w-full max-w-6xl mx-auto px-5 md:px-8 pt-10 pb-40 animate-in fade-in duration-500">
 
-      {/* MUDANÇA: Texto agora é azul escuro (#1e3a8a) */}
+      {/* Saudação em azul escuro sobre o fundo branco */}
       <div className="mb-10">
         <h1 className="text-3xl font-bold tracking-tight leading-tight text-[#1e3a8a]">
           Olá, {userName}. <span className="text-[#cfa030]">{greeting}!</span>
@@ -70,8 +72,8 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-        {/* Card Azul Principal */}
-        <div className="lg:col-span-8 bg-[#1e3a8a] p-10 md:p-14 rounded-[3.5rem] shadow-2xl text-white">
+        {/* Card Principal agora em Azul Claro (#5e85f0) */}
+        <div className="lg:col-span-8 bg-[#5e85f0] p-10 md:p-14 rounded-[3.5rem] shadow-2xl text-white">
           <div className="flex justify-between items-center mb-12">
             <h3 className="text-base font-black uppercase tracking-[0.25em] text-[#cfa030]">Status Rifas</h3>
             <div className="text-right">
@@ -96,7 +98,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
 
             <div className="grid grid-cols-1 gap-5 w-full">
               {chartData.map((item, i) => (
-                <div key={i} className="flex justify-between items-center p-6 rounded-3xl bg-white/5 border border-white/5">
+                <div key={i} className="flex justify-between items-center p-6 rounded-3xl bg-white/10 border border-white/10 backdrop-blur-sm">
                   <div className="flex items-center gap-5">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }} />
                     <span className="text-base font-black uppercase text-white/80">{item.name}</span>
@@ -110,6 +112,8 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
 
         {/* Lado Direito */}
         <div className="lg:col-span-4 flex flex-col gap-10">
+
+          {/* Card de Valor (Dourado) */}
           <div className="bg-[#cfa030] p-10 rounded-[3.5rem] shadow-xl text-[#1e3a8a] flex flex-col gap-2">
             <Wallet className="w-10 h-10 mb-4 opacity-40" />
             <p className="text-xs font-black uppercase tracking-widest">Total Apurado</p>
@@ -118,18 +122,20 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
             </p>
           </div>
 
-          <div className="bg-[#1e3a8a] p-10 rounded-[3.5rem] shadow-lg text-white">
+          {/* Card de Performance agora em Azul Claro (#5e85f0) */}
+          <div className="bg-[#5e85f0] p-10 rounded-[3.5rem] shadow-lg text-white">
             <div className="flex items-center gap-4 mb-8">
               <Trophy className="w-8 h-8 text-[#cfa030]" />
               <h3 className="text-sm font-black uppercase text-white/50">Performance</h3>
             </div>
             <div className="space-y-4">
               {topSellers.map((s, i) => (
-                <div key={i} className="flex justify-between items-center p-6 bg-white/5 rounded-2xl">
+                <div key={i} className="flex justify-between items-center p-6 bg-white/10 rounded-2xl border border-white/10">
                   <span className="text-lg font-bold">{i + 1}º {s.name}</span>
                   <span className="text-2xl font-black text-[#cfa030]">{s.sold}</span>
                 </div>
               ))}
+              {topSellers.length === 0 && <p className="text-center opacity-40 py-4 font-bold">Sem vendas ainda</p>}
             </div>
           </div>
         </div>
