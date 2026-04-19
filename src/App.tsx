@@ -5,7 +5,7 @@ import { Dashboard } from './views/Dashboard';
 import { Resellers } from './views/Resellers';
 import { Inventory } from './views/Inventory';
 import { Login } from './views/Login';
-import { Admin } from './views/Admin';
+import { Admin } from './views/Profile';
 import { supabase } from './lib/supabase';
 
 export default function App() {
