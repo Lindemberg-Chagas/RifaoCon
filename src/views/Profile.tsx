@@ -21,7 +21,7 @@ export function Profile() {
   if (!user) return null;
 
   return (
-    // MUDANÇA: Removido 'text-white' do main para não sumir no fundo claro
+    // Fundo claro para descanso visual
     <main className="flex-1 w-full max-w-2xl mx-auto px-5 pt-20 pb-40 min-h-screen">
 
       {/* Área do Avatar e Nome */}
@@ -32,10 +32,11 @@ export function Profile() {
             alt="Avatar"
             className="w-40 h-40 rounded-full border-8 border-[#cfa030] shadow-2xl"
           />
+          {/* Indicador Online */}
           <div className="absolute bottom-2 right-2 bg-emerald-500 w-8 h-8 rounded-full border-4 border-white" />
         </div>
 
-        {/* MUDANÇA: Nome agora em Azul Escuro (#1e3a8a) para contraste no fundo branco */}
+        {/* Nome em azul escuro para contraste total no fundo branco */}
         <h2 className="mt-8 text-4xl font-black tracking-tight text-[#1e3a8a] text-center">
           {user.user_metadata.full_name}
         </h2>
@@ -45,39 +46,39 @@ export function Profile() {
       </div>
 
       <div className="space-y-6">
-        {/* Card de Identidade - Mantido Azul */}
-        <div className="bg-[#1e3a8a] p-8 rounded-[3rem] border border-white/10 shadow-lg text-white">
-          <h3 className="text-white/30 text-xs font-black uppercase tracking-widest mb-8">Meus Dados</h3>
+        {/* Card de Identidade - AGORA EM AZUL CLARO (#5e85f0) */}
+        <div className="bg-[#5e85f0] p-8 rounded-[3rem] shadow-xl text-white">
+          <h3 className="text-white/40 text-xs font-black uppercase tracking-widest mb-8">Meus Dados</h3>
           <div className="space-y-8">
             <div className="flex items-center gap-6">
-              <div className="p-4 bg-white/5 rounded-2xl text-[#cfa030]">
+              <div className="p-4 bg-white/10 rounded-2xl text-[#cfa030]">
                 <Mail className="w-7 h-7" />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-widest text-white/30">E-mail</p>
+                <p className="text-xs font-black uppercase tracking-widest text-white/40">E-mail Principal</p>
                 <p className="text-xl font-bold">{user.email}</p>
               </div>
             </div>
             <div className="flex items-center gap-6">
-              <div className="p-4 bg-white/5 rounded-2xl text-[#cfa030]">
+              <div className="p-4 bg-white/10 rounded-2xl text-[#cfa030]">
                 <Shield className="w-7 h-7" />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-widest text-white/30">Acesso</p>
-                <p className="text-xl font-bold text-emerald-400">Total (Super Admin)</p>
+                <p className="text-xs font-black uppercase tracking-widest text-white/40">Nível de Acesso</p>
+                <p className="text-xl font-bold text-white">Total (Super Admin)</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Card de Preferências - Mantido Azul */}
-        <div className="bg-[#1e3a8a] p-8 rounded-[3rem] border border-white/10 shadow-lg text-white">
-          <h3 className="text-white/30 text-xs font-black uppercase tracking-widest mb-4">Preferências</h3>
+        {/* Card de Preferências - AGORA EM AZUL CLARO (#5e85f0) */}
+        <div className="bg-[#5e85f0] p-8 rounded-[3rem] shadow-xl text-white">
+          <h3 className="text-white/40 text-xs font-black uppercase tracking-widest mb-4">Configurações</h3>
           <div className="space-y-2">
             <div className="flex items-center justify-between p-5 hover:bg-white/5 rounded-2xl transition-colors group">
               <div className="flex items-center gap-5">
-                <Bell className="w-6 h-6 text-white/60 group-hover:text-[#cfa030]" />
-                <span className="text-lg font-bold">Notificações Push</span>
+                <Bell className="w-6 h-6 text-white/60 group-hover:text-white" />
+                <span className="text-lg font-bold">Notificações</span>
               </div>
               <div className="w-12 h-7 bg-[#cfa030] rounded-full relative">
                 <div className="absolute right-1 top-1 bg-[#1e3a8a] w-5 h-5 rounded-full" />
@@ -85,8 +86,8 @@ export function Profile() {
             </div>
             <div className="flex items-center justify-between p-5 hover:bg-white/5 rounded-2xl transition-colors group">
               <div className="flex items-center gap-5">
-                <Moon className="w-6 h-6 text-white/60 group-hover:text-[#cfa030]" />
-                <span className="text-lg font-bold">Modo Engenheiro</span>
+                <Moon className="w-6 h-6 text-white/60 group-hover:text-white" />
+                <span className="text-lg font-bold">Modo Escuro</span>
               </div>
               <div className="w-12 h-7 bg-white/10 rounded-full relative">
                 <div className="absolute left-1 top-1 bg-white/40 w-5 h-5 rounded-full" />
@@ -95,10 +96,10 @@ export function Profile() {
           </div>
         </div>
 
-        {/* Botão de Sair - Vermelho no fundo branco fica bem visível */}
+        {/* Botão de Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-4 p-8 bg-red-500/10 border-2 border-red-500/20 text-red-500 rounded-[2.5rem] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all duration-300"
+          className="w-full flex items-center justify-center gap-4 p-8 bg-red-500/10 border-2 border-red-500/20 text-red-500 rounded-[2.5rem] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all duration-300 shadow-sm"
         >
           <LogOut className="w-8 h-8" />
           Sair do Sistema
