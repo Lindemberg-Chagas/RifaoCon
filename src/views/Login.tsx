@@ -83,8 +83,8 @@ export function Login() {
 
       {/* Footer Info */}
       <div className="z-10 text-center flex flex-col gap-2 items-center w-full animate-in fade-in duration-1000 delay-300">
-        <p className="text-[9px] md:text-[10px] font-semibold tracking-[0.15em] uppercase opacity-40">
-          WLC Tech - Fortaleza - CE
+        <p className="text-[15px] md:text-[10px] font-semibold tracking-[0.15em] uppercase opacity-40">
+          WLC Tech - 2026
         </p>
         <div className="flex items-center gap-2">
           <span className="h-[1px] w-8 bg-white/10"></span>
