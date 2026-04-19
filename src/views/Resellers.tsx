@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 
 export function Resellers() {
   const [bondososList, setBondososList] = useState<any[]>([]);
+  const [activeRaffle, setActiveRaffle] = useState<any>(null); // Estado para a rifa ativa
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [customAlert, setCustomAlert] = useState<string | null>(null);
@@ -24,19 +25,37 @@ export function Resellers() {
   const NUMEROS_POR_BLOCO = 12;
 
   useEffect(() => {
-    fetchBondosos();
+    fetchActiveRaffleAndBondosos();
   }, []);
 
-  const fetchBondosos = async () => {
+  // FUNÇÃO ATUALIZADA: Agora busca a rifa ativa primeiro
+  const fetchActiveRaffleAndBondosos = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('bondosos')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      // 1. Identifica qual a rifa ativa no sistema
+      const { data: raffle } = await supabase
+        .from('raffles')
+        .select('*')
+        .eq('is_active', true)
+        .single();
 
-    if (error) console.error("Erro ao buscar dados:", error);
-    else setBondososList(data || []);
-    setIsLoading(false);
+      if (raffle) {
+        setActiveRaffle(raffle);
+        // 2. Busca apenas os bondosos vinculados a esta rifa específica
+        const { data: bondosos, error } = await supabase
+          .from('bondosos')
+          .select('*')
+          .eq('raffle_id', raffle.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setBondososList(bondosos || []);
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar dados:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +68,10 @@ export function Resellers() {
   };
 
   const handleOpenModal = () => {
+    if (!activeRaffle) {
+      setCustomAlert("Erro: Nenhuma rifa ativa encontrada no sistema.");
+      return;
+    }
     let nextAvailableStart = 0;
     if (bondososList.length > 0) {
       const maxEndNum = Math.max(...bondososList.map(b => {
@@ -66,45 +89,37 @@ export function Resellers() {
     setIsModalOpen(true);
   };
 
+  // FUNÇÃO ATUALIZADA: Agora salva o raffle_id no banco
   const handleAddBondoso = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeRaffle) return;
+
     const phoneDigits = newPhone.replace(/\D/g, '');
     if (!newName || !phoneDigits || !newBlockCount || !newRangeStart) {
       setCustomAlert("Preencha todos os campos.");
       return;
     }
+
     const startNum = parseInt(newRangeStart, 10);
     const blocks = parseInt(newBlockCount, 10);
-    if (startNum % NUMEROS_POR_BLOCO !== 0) {
-      setCustomAlert(`O número inicial deve ser múltiplo de ${NUMEROS_POR_BLOCO}.`);
-      return;
-    }
     const endNum = startNum + (blocks * NUMEROS_POR_BLOCO) - 1;
-    const startFormatted = String(startNum).padStart(5, '0');
-    const endFormatted = String(endNum).padStart(5, '0');
 
     const { data, error } = await supabase.from('bondosos').insert([{
       name: newName,
       phone: phoneDigits,
-      range: `${startFormatted} - ${endFormatted}`,
+      range: `${String(startNum).padStart(5, '0')} - ${String(endNum).padStart(5, '0')}`,
+      raffle_id: activeRaffle.id, // VINCULA À RIFA ATIVA
       status: 'pending',
       status_label: 'Pendente',
       sold_tickets: 0,
       collected_amount: 0
     }]).select();
 
-    if (error) setCustomAlert("Erro ao salvar.");
+    if (error) setCustomAlert("Erro ao salvar no banco.");
     else if (data) {
       setBondososList([data[0], ...bondososList]);
       setIsModalOpen(false);
     }
-  };
-
-  const openAccountability = (bondoso: any) => {
-    setSelectedBondoso(bondoso);
-    setSoldTickets('');
-    setCollectedAmount('');
-    setIsAccountModalOpen(true);
   };
 
   const handleAccountabilitySubmit = async (e: React.FormEvent) => {
@@ -128,7 +143,6 @@ export function Resellers() {
     const searchLower = searchTerm.toLowerCase().trim();
     if (!searchLower) return true;
     if (bondoso.name.toLowerCase().includes(searchLower)) return true;
-    if (bondoso.phone && bondoso.phone.includes(searchLower)) return true;
     const searchNum = parseInt(searchLower, 10);
     if (!isNaN(searchNum) && bondoso.range) {
       const [startStr, endStr] = bondoso.range.split(' - ');
@@ -144,10 +158,14 @@ export function Resellers() {
 
   return (
     <main className="flex-1 w-full max-w-5xl mx-auto px-5 pt-10 pb-40 min-h-screen">
-      {/* Título em Azul Escuro para contraste com o fundo branco da página */}
-      <h2 className="text-5xl font-black mb-10 tracking-tight text-[#1e3a8a]">Bondosos</h2>
+      <div className="mb-10">
+        <h2 className="text-5xl font-black tracking-tight text-[#1e3a8a]">Bondosos</h2>
+        {/* Mostra qual rifa está sendo editada no momento */}
+        <p className="text-[#cfa030] font-black uppercase text-xs mt-2 tracking-widest bg-[#1e3a8a]/5 px-4 py-2 rounded-full w-fit">
+          Campanha: {activeRaffle?.name || 'A carregar...'}
+        </p>
+      </div>
 
-      {/* Caixa de Busca agora em Azul Claro (#5e85f0) */}
       <div className="mb-12 bg-[#5e85f0] p-10 rounded-[2.5rem] shadow-xl text-white">
         <label className="text-sm font-black text-white/50 uppercase tracking-widest block mb-4">Busca Rápida</label>
         <div className="relative">
@@ -163,14 +181,11 @@ export function Resellers() {
 
       <div className="space-y-6">
         {isLoading ? (
-          <div className="text-center py-20 font-bold text-xl uppercase tracking-widest text-[#1e3a8a]/30">Carregando...</div>
+          <div className="text-center py-20 font-bold text-xl uppercase tracking-widest text-[#1e3a8a]/30 animate-pulse">Sincronizando...</div>
         ) : filteredBondosos.map((reseller) => (
-          /* Cartões dos Bondosos agora em Azul Claro (#5e85f0) */
           <div key={reseller.id} className="p-8 bg-[#5e85f0] rounded-[3rem] border border-white/10 shadow-lg flex flex-col gap-8 text-white animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 rounded-full bg-[#cfa030] text-[#1e3a8a] flex items-center justify-center font-black text-3xl shrink-0 uppercase">
-                {reseller.name.charAt(0)}
-              </div>
+              <div className="w-16 h-16 rounded-full bg-[#cfa030] text-[#1e3a8a] flex items-center justify-center font-black text-3xl shrink-0 uppercase">{reseller.name.charAt(0)}</div>
               <div className="overflow-hidden">
                 <p className="font-black text-2xl leading-tight truncate">{reseller.name}</p>
                 <div className="flex items-center gap-3 text-[#cfa030] mt-2">
@@ -179,46 +194,27 @@ export function Resellers() {
                 </div>
               </div>
             </div>
-
             <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => window.open(`https://wa.me/55${reseller.phone}`, '_blank')}
-                className="flex-1 bg-white/10 border border-white/10 py-6 rounded-3xl flex items-center justify-center gap-4 font-black uppercase text-sm tracking-widest hover:bg-white/20 transition-all"
-              >
-                <MessageCircle className="w-7 h-7" /> WhatsApp
-              </button>
+              <button onClick={() => window.open(`https://wa.me/55${reseller.phone}`, '_blank')} className="flex-1 bg-white/10 border border-white/10 py-6 rounded-3xl flex items-center justify-center gap-4 font-black uppercase text-sm tracking-widest hover:bg-white/20 transition-all"><MessageCircle className="w-7 h-7" /> WhatsApp</button>
               {reseller.status === 'pending' ? (
-                <button
-                  onClick={() => openAccountability(reseller)}
-                  className="flex-1 bg-[#cfa030] text-[#1e3a8a] py-6 rounded-3xl flex items-center justify-center gap-4 font-black uppercase text-sm tracking-widest hover:bg-[#b58b29] transition-all"
-                >
-                  <CheckCircle2 className="w-7 h-7" /> Dar Baixa
-                </button>
+                <button onClick={() => { setSelectedBondoso(reseller); setIsAccountModalOpen(true); }} className="flex-1 bg-[#cfa030] text-[#1e3a8a] py-6 rounded-3xl flex items-center justify-center gap-4 font-black uppercase text-sm tracking-widest hover:bg-[#b58b29] transition-all"><CheckCircle2 className="w-7 h-7" /> Dar Baixa</button>
               ) : (
-                <div className="flex-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-6 rounded-3xl flex items-center justify-center gap-4 font-black uppercase text-sm tracking-widest">
-                  Pago ✓
-                </div>
+                <div className="flex-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-6 rounded-3xl flex items-center justify-center gap-4 font-black uppercase text-sm tracking-widest">Pago ✓</div>
               )}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Botão de Adicionar Flutuante - Mantido o padrão com borda para destacar no fundo branco */}
-      <button
-        onClick={handleOpenModal}
-        className="fixed bottom-32 right-6 w-20 h-20 bg-[#cfa030] text-[#1e3a8a] rounded-3xl shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40 border-4 border-white"
-      >
-        <Plus className="w-10 h-10 stroke-[3]" />
-      </button>
+      <button onClick={handleOpenModal} className="fixed bottom-32 right-6 w-20 h-20 bg-[#cfa030] text-[#1e3a8a] rounded-3xl shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40 border-4 border-white shadow-[0_15px_30px_-5px_rgba(207,160,48,0.4)]"><Plus className="w-10 h-10 stroke-[3]" /></button>
 
-      {/* --- MODAL DE CADASTRO (Cabeçalho em Azul Claro) --- */}
+      {/* --- MODAL DE CADASTRO --- */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-[3rem] w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="bg-[#5e85f0] px-8 py-6 flex items-center justify-between text-white">
               <h3 className="text-2xl font-black uppercase">Novo Bondoso</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/70 hover:text-white"><X className="w-8 h-8" /></button>
+              <button onClick={() => setIsModalOpen(false)}><X className="w-8 h-8" /></button>
             </div>
             <form onSubmit={handleAddBondoso} className="p-8">
               <div className="space-y-6">
@@ -232,22 +228,22 @@ export function Resellers() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[#1e3a8a] text-sm font-black uppercase tracking-widest mb-2">Blocos</label>
-                    <input type="number" value={newBlockCount} onChange={(e) => setNewBlockCount(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-6 py-5 text-2xl text-[#1e3a8a] font-black outline-none focus:border-[#cfa030]" required />
+                    <label className="block text-[#1e3a8a] text-sm font-black uppercase mb-2">Blocos</label>
+                    <input type="number" value={newBlockCount} onChange={(e) => setNewBlockCount(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-6 py-5 text-2xl text-[#1e3a8a] font-black outline-none" required />
                   </div>
                   <div>
-                    <label className="block text-[#1e3a8a] text-sm font-black uppercase tracking-widest mb-2">Nº Inicial</label>
+                    <label className="block text-[#1e3a8a] text-sm font-black uppercase mb-2">Nº Inicial</label>
                     <input type="number" value={newRangeStart} onChange={(e) => setNewRangeStart(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-6 py-5 text-2xl text-[#1e3a8a] font-black outline-none border-[#cfa030]" required />
                   </div>
                 </div>
                 <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 flex justify-between items-center">
-                  <span className="text-sm font-black text-[#1e3a8a] uppercase tracking-widest">Faixa Gerada</span>
+                  <span className="text-sm font-black text-[#1e3a8a] uppercase">Faixa Gerada</span>
                   <span className="text-2xl font-black text-[#1e3a8a] font-mono">{previewText}</span>
                 </div>
               </div>
               <div className="flex gap-4 mt-10">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-6 bg-slate-100 text-[#1e3a8a] font-black rounded-2xl uppercase tracking-widest">Cancelar</button>
-                <button type="submit" className="flex-1 py-6 bg-[#cfa030] text-[#1e3a8a] font-black rounded-2xl uppercase tracking-widest shadow-lg">Salvar</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-6 bg-slate-100 text-[#1e3a8a] font-black rounded-2xl uppercase">Cancelar</button>
+                <button type="submit" className="flex-1 py-6 bg-[#cfa030] text-[#1e3a8a] font-black rounded-2xl uppercase shadow-lg">Salvar</button>
               </div>
             </form>
           </div>
@@ -260,7 +256,7 @@ export function Resellers() {
           <div className="bg-white rounded-[3rem] w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
             <div className="bg-emerald-600 px-8 py-6 flex items-center justify-between text-white">
               <h3 className="text-2xl font-black uppercase tracking-tight">Baixa de Números</h3>
-              <button onClick={() => setIsAccountModalOpen(false)} className="text-white/70 hover:text-white"><X className="w-8 h-8" /></button>
+              <button onClick={() => setIsAccountModalOpen(false)}><X className="w-8 h-8" /></button>
             </div>
             <form onSubmit={handleAccountabilitySubmit} className="p-10">
               <div className="mb-8 text-[#1e3a8a]">
@@ -270,16 +266,14 @@ export function Resellers() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-[#1e3a8a] text-sm font-black uppercase mb-2">Vendidos</label>
-                  <input type="number" value={soldTickets} onChange={(e) => setSoldTickets(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-6 py-5 text-2xl font-black text-[#1e3a8a] outline-none" required />
+                  <input type="number" value={soldTickets} onChange={(e) => setSoldTickets(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-6 py-5 text-2xl font-black text-[#1e3a8a]" required />
                 </div>
                 <div>
                   <label className="block text-[#1e3a8a] text-sm font-black uppercase mb-2">Valor Recebido (R$)</label>
-                  <input type="text" value={collectedAmount} onChange={(e) => setCollectedAmount(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-6 py-5 text-2xl font-black text-[#1e3a8a] outline-none" required />
+                  <input type="text" value={collectedAmount} onChange={(e) => setCollectedAmount(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-6 py-5 text-2xl font-black text-[#1e3a8a]" required />
                 </div>
               </div>
-              <button type="submit" className="w-full mt-10 py-6 bg-emerald-600 text-white font-black rounded-3xl uppercase tracking-widest shadow-xl text-lg flex items-center justify-center gap-4">
-                <CheckCircle2 className="w-8 h-8" /> Confirmar
-              </button>
+              <button type="submit" className="w-full mt-10 py-6 bg-emerald-600 text-white font-black rounded-3xl uppercase text-lg flex items-center justify-center gap-4"><CheckCircle2 className="w-8 h-8" /> Confirmar</button>
             </form>
           </div>
         </div>
@@ -287,16 +281,16 @@ export function Resellers() {
 
       {/* Alerta Customizado */}
       {customAlert && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[3rem] w-full max-w-md shadow-2xl p-10 text-center animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 text-center">
+          <div className="bg-white rounded-[3rem] w-full max-w-md shadow-2xl p-10 animate-in zoom-in-95">
             <p className="text-[#1e3a8a] text-2xl font-black leading-relaxed">{customAlert}</p>
             <button onClick={() => setCustomAlert(null)} className="mt-10 w-full py-6 bg-[#cfa030] text-[#1e3a8a] font-black rounded-2xl uppercase tracking-widest shadow-md text-lg">Entendido</button>
           </div>
         </div>
       )}
 
-      <div className="mt-8 text-center pb-8">
-        <p className="text-xs font-bold text-[#1e3a8a]/30 tracking-[0.1em] uppercase">Fim da Lista — {filteredBondosos.length} Registros</p>
+      <div className="mt-8 text-center pb-8 opacity-30">
+        <p className="text-xs font-bold text-[#1e3a8a] tracking-[0.1em] uppercase italic">Fim da Lista Ativa</p>
       </div>
     </main>
   );
