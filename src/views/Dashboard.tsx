@@ -86,7 +86,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
 
           <div className="lg:col-span-8 bg-[#5e85f0] p-6 md:p-10 rounded-[2rem] border border-[#cfa030]/20 shadow-lg relative overflow-hidden">
             <div className="flex justify-between items-center mb-10">
-              <h3 className="text-sm font-black tracking-widest text-white/50 uppercase">Distribuição de Números</h3>
+              <h3 className="text-sm font-black tracking-widest text-white/50 uppercase">Quantidade de Números</h3>
               <div className="text-right">
                 <span className="block text-2xl font-black text-white leading-none">20.000</span>
                 <span className="text-[10px] font-bold text-[#cfa030] uppercase tracking-widest">Total</span>
