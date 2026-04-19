@@ -5,8 +5,6 @@ import { supabase } from '../lib/supabase';
 export function Resellers() {
   const [bondososList, setBondososList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Novo Estado para o Campo de Busca
   const [searchTerm, setSearchTerm] = useState('');
 
   // Estados do Modal de Cadastro
@@ -49,6 +47,32 @@ export function Resellers() {
     setNewPhone(formattedValue);
   };
 
+  // --- NOVA LÓGICA: ABRIR MODAL COM O PRÓXIMO NÚMERO LIVRE ---
+  const handleOpenModal = () => {
+    let nextAvailableStart = 0;
+
+    if (bondososList.length > 0) {
+      // Descobre o maior número final já cadastrado no banco
+      const maxEndNum = Math.max(...bondososList.map(b => {
+        if (!b.range) return 0;
+        const [, endStr] = b.range.split(' - ');
+        return parseInt(endStr, 10) || 0;
+      }));
+
+      // O próximo começo é o maior número + 1
+      nextAvailableStart = maxEndNum + 1;
+    }
+
+    // Garante que o número está alinhado com a regra de blocos de 12
+    const alignedStart = Math.ceil(nextAvailableStart / NUMEROS_POR_BLOCO) * NUMEROS_POR_BLOCO;
+
+    setNewRangeStart(alignedStart.toString());
+    setNewBlockCount('1'); // Sugere 1 bloco por padrão
+    setNewName('');
+    setNewPhone('');
+    setIsModalOpen(true);
+  };
+
   const handleAddBondoso = async (e: React.FormEvent) => {
     e.preventDefault();
     const phoneDigits = newPhone.replace(/\D/g, '');
@@ -65,7 +89,31 @@ export function Resellers() {
 
     const startNum = parseInt(newRangeStart, 10);
     const blocks = parseInt(newBlockCount, 10);
+
+    // 1. VALIDAÇÃO DE MÚLTIPLO DE 12 (Ex: Não deixa começar no 10)
+    if (startNum % NUMEROS_POR_BLOCO !== 0) {
+      alert(`O número inicial está quebrado! Ele deve ser um múltiplo de ${NUMEROS_POR_BLOCO} (Ex: 0, 12, 24, 36...).`);
+      return;
+    }
+
     const endNum = startNum + (blocks * NUMEROS_POR_BLOCO) - 1;
+
+    // 2. VALIDAÇÃO DE COLISÃO (Verifica se a faixa bate com a de alguém)
+    const isOverlapping = bondososList.some(bondoso => {
+      if (!bondoso.range) return false;
+      const [existingStartStr, existingEndStr] = bondoso.range.split(' - ');
+      const existingStart = parseInt(existingStartStr, 10);
+      const existingEnd = parseInt(existingEndStr, 10);
+
+      // Lógica de colisão: O novo começo é antes do fim existente E o novo fim é depois do começo existente
+      return startNum <= existingEnd && endNum >= existingStart;
+    });
+
+    if (isOverlapping) {
+      alert("Erro de Colisão! Essa faixa de números já está alocada para outro bondoso. Escolha outro número inicial.");
+      return;
+    }
+
     const startFormatted = String(startNum).padStart(5, '0');
     const endFormatted = String(endNum).padStart(5, '0');
 
@@ -86,7 +134,6 @@ export function Resellers() {
       alert("Erro ao salvar no banco de dados.");
     } else if (data) {
       setBondososList([data[0], ...bondososList]);
-      setNewName(''); setNewPhone(''); setNewBlockCount(''); setNewRangeStart('');
       setIsModalOpen(false);
     }
   };
@@ -100,12 +147,10 @@ export function Resellers() {
 
   const handleAccountabilitySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!soldTickets || !collectedAmount) {
       alert("Preencha a quantidade vendida e o valor recebido.");
       return;
     }
-
     const sold = parseInt(soldTickets, 10);
     const amount = parseFloat(collectedAmount.replace(',', '.'));
 
@@ -130,18 +175,13 @@ export function Resellers() {
     }
   };
 
-  // --- LÓGICA DE FILTRAGEM (MOTOR DE BUSCA) ---
   const filteredBondosos = bondososList.filter((bondoso) => {
     const searchLower = searchTerm.toLowerCase().trim();
-    if (!searchLower) return true; // Se não tiver busca, mostra todos
+    if (!searchLower) return true;
 
-    // 1. Tenta achar no Nome do Bondoso
     if (bondoso.name.toLowerCase().includes(searchLower)) return true;
-
-    // 2. Tenta achar no Número de WhatsApp
     if (bondoso.phone && bondoso.phone.includes(searchLower)) return true;
 
-    // 3. Tenta achar se o número digitado está dentro da faixa do bondoso (ex: 508 dentro de 500-511)
     const searchNum = parseInt(searchLower, 10);
     if (!isNaN(searchNum) && bondoso.range) {
       const [startStr, endStr] = bondoso.range.split(' - ');
@@ -151,7 +191,6 @@ export function Resellers() {
         if (searchNum >= start && searchNum <= end) return true;
       }
     }
-
     return false;
   });
 
@@ -277,8 +316,9 @@ export function Resellers() {
         <p className="text-xs md:text-sm font-bold text-white/30 tracking-[0.1em] uppercase">Fim da Lista — {filteredBondosos.length} Registros</p>
       </div>
 
+      {/* Trocamos de setIsModalOpen(true) para a nossa nova função inteligente */}
       <button
-        onClick={() => setIsModalOpen(true)}
+        onClick={handleOpenModal}
         className="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-14 h-14 md:w-16 md:h-16 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] rounded-2xl md:rounded-full shadow-[0_10px_25px_rgba(207,160,48,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 z-40 border border-[#b58b29]"
         title="Entregar Novo Bloco"
       >
@@ -307,11 +347,11 @@ export function Resellers() {
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div>
                   <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">Qtd. de Blocos</label>
-                  <input type="number" value={newBlockCount} onChange={(e) => setNewBlockCount(e.target.value)} placeholder="Ex: 2" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all" required />
+                  <input type="number" value={newBlockCount} onChange={(e) => setNewBlockCount(e.target.value)} placeholder="Ex: 1" min="1" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all" required />
                 </div>
                 <div>
                   <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">Número Inicial</label>
-                  <input type="number" value={newRangeStart} onChange={(e) => setNewRangeStart(e.target.value)} placeholder="Ex: 500" min="0" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all" required />
+                  <input type="number" value={newRangeStart} onChange={(e) => setNewRangeStart(e.target.value)} placeholder="Ex: 0" min="0" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all" required />
                 </div>
               </div>
               <div className="mb-8 bg-slate-100 rounded-xl py-3 px-4 flex items-center justify-between border border-slate-200 border-dashed">
