@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Trophy, Wallet } from 'lucide-react';
+import { Trophy, Wallet, Medal } from 'lucide-react'; // Adicionado Medal
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -23,7 +23,6 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setUserName(user.user_metadata?.full_name?.split(' ')[0] || 'Usuário');
 
-      // 1. Buscar a Rifa Ativa
       const { data: raffle } = await supabase
         .from('raffles')
         .select('*')
@@ -32,7 +31,6 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
 
       if (raffle) {
         setActiveRaffle(raffle);
-        // 2. Buscar bondosos apenas desta rifa
         const { data: bondosos } = await supabase
           .from('bondosos')
           .select('*')
@@ -73,14 +71,19 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
     { name: 'RIFAS DISPONÍVEIS', value: disponiveis, color: '#1e3a8a' }
   ];
 
-  // Lógica do Ranking (Top 3)
   const topSellers = Array.from(stats.ranking.entries())
     .map(([name, sold]) => ({ name, sold }))
     .sort((a, b) => b.sold - a.sold)
     .slice(0, 3);
 
-  if (isLoading) return <div className="flex-1 flex items-center justify-center min-h-[70vh] text-[#1e3a8a] font-black text-2xl uppercase animate-pulse">Sincronizando...</div>;
+  // Cores e rótulos para as medalhas
+  const rankStyles = [
+    { label: 'OURO', color: 'text-[#cfa030]', bg: 'bg-[#cfa030]/10' },
+    { label: 'PRATA', color: 'text-slate-300', bg: 'bg-slate-300/10' },
+    { label: 'BRONZE', color: 'text-amber-700', bg: 'bg-amber-700/10' }
+  ];
 
+  if (isLoading) return <div className="flex-1 flex items-center justify-center min-h-[70vh] text-[#1e3a8a] font-black text-2xl uppercase animate-pulse">Sincronizando...</div>;
   if (!activeRaffle) return <div className="p-20 text-center font-black text-[#1e3a8a] uppercase">Nenhuma rifa ativa. Ative uma no Perfil.</div>;
 
   return (
@@ -97,7 +100,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
             <h2 className="text-4xl md:text-6xl font-black uppercase tracking-[0.2em] text-[#cfa030] text-center">Status Rifas</h2>
             <div className="mt-4 opacity-80 text-center">
               <p className="text-xl font-black">{TOTAL_NUMEROS.toLocaleString('pt-BR')}</p>
-              <p className="text-[10px] font-bold uppercase tracking-widest">Meta desta Campanha</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest">Meta da Campanha</p>
             </div>
           </div>
 
@@ -115,14 +118,15 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
               </div>
             </div>
 
+            {/* MUDANÇA: Layout das legendas com Nome em cima e Número abaixo */}
             <div className="grid grid-cols-1 gap-5 w-full">
               {chartData.map((item, i) => (
-                <div key={i} className="flex justify-between items-center p-6 rounded-3xl bg-white/10 border border-white/10 backdrop-blur-md">
-                  <div className="flex items-center gap-4">
-                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-sm font-black uppercase text-white/90">{item.name}</span>
+                <div key={i} className="flex flex-col p-6 rounded-3xl bg-white/10 border border-white/10 backdrop-blur-md">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: item.color }} />
+                    <span className="text-sm font-black uppercase text-white/60 tracking-wider">{item.name}</span>
                   </div>
-                  <span className="text-2xl font-black">{item.value.toLocaleString('pt-BR')}</span>
+                  <span className="text-4xl font-black">{item.value.toLocaleString('pt-BR')}</span>
                 </div>
               ))}
             </div>
@@ -130,29 +134,36 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
         </div>
 
         <div className="lg:col-span-4 flex flex-col gap-10">
-          {/* Card de Valor Arrecadado */}
+          {/* MUDANÇA: Card de Valor com menos ênfase (text-3xl) */}
           <div className="bg-[#cfa030] p-10 rounded-[3.5rem] shadow-xl text-[#1e3a8a]">
-            <Wallet className="w-10 h-10 mb-4 opacity-40" />
-            <p className="text-xs font-black uppercase">Arrecadado</p>
-            <p className="text-5xl font-black tracking-tighter">
+            <div className="flex items-center gap-3 mb-4">
+              <Wallet className="w-6 h-6 opacity-60" />
+              <p className="text-xs font-black uppercase tracking-widest">Arrecadado</p>
+            </div>
+            <p className="text-3xl font-black tracking-tight">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.apurado)}
             </p>
           </div>
 
-          {/* RESTAURADO: Card de Performance (Ranking Top 3) */}
+          {/* MUDANÇA: Ranking Top 3 Bondosos com Medalhas */}
           <div className="bg-[#5e85f0] p-10 rounded-[3.5rem] shadow-lg text-white">
             <div className="flex items-center gap-4 mb-8">
               <Trophy className="w-8 h-8 text-[#cfa030]" />
-              <h3 className="text-sm font-black uppercase text-white/50 tracking-widest">Performance</h3>
+              <h3 className="text-lg font-black uppercase tracking-tighter">TOP 3 BONDOSOS</h3>
             </div>
             <div className="space-y-4">
               {topSellers.map((s, i) => (
-                <div key={i} className="flex justify-between items-center p-6 bg-white/10 rounded-2xl border border-white/10">
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] font-black text-[#cfa030] uppercase mb-1">{i + 1}º Lugar</span>
-                    <span className="text-lg font-bold truncate pr-2">{s.name}</span>
+                <div key={i} className={`flex justify-between items-center p-6 rounded-2xl border border-white/10 ${rankStyles[i].bg}`}>
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={`shrink-0 flex flex-col items-center ${rankStyles[i].color}`}>
+                      <Medal className="w-8 h-8" />
+                      <span className="text-[8px] font-black">{rankStyles[i].label}</span>
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xl font-bold truncate">{s.name}</span>
+                    </div>
                   </div>
-                  <span className="text-2xl font-black text-white shrink-0">{s.sold}</span>
+                  <span className="text-3xl font-black text-white ml-2">{s.sold}</span>
                 </div>
               ))}
               {topSellers.length === 0 && (
