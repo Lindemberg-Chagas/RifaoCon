@@ -53,8 +53,7 @@ export function Login() {
           </div>
 
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2 uppercase">Rifas Vendidas</h1>
-          <p className="text-white/70 text-sm md:text-base font-medium max-w-[280px] leading-relaxed">
-            Ação entre Amigos<br />
+          <p className="text-white/70 text-xl md:text-2xl font-medium max-w-[320px] leading-relaxed">Ação entre Amigos<br />
             <span className="text-[20px] uppercase tracking-[0.2em] opacity-70">Acesso Administrativo</span>
           </p>
         </div>
