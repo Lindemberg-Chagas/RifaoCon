@@ -134,7 +134,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
 
           <div className="lg:col-span-4 flex flex-col gap-6">
 
-            <div className="bg-[#1e3a8a] p-6 rounded-[2rem] shadow-lg relative overflow-hidden group">
+            <div className="bg-[#5e85f0] p-6 rounded-[2rem] shadow-lg relative overflow-hidden group">
               <Wallet className="absolute -right-4 -bottom-4 text-white/5 w-32 h-32 transition-transform group-hover:scale-110 duration-500" />
               <p className="text-xs font-black text-[#cfa030] uppercase tracking-widest mb-1 relative z-10">Total Apurado</p>
               <div className="flex items-baseline gap-2 text-white relative z-10">
