@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Search } from 'lucide-react';
+import { LayoutGrid, Users, User } from 'lucide-react';
 
 interface BottomNavProps {
   activeTab: string;
@@ -6,33 +6,38 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
+  // Definimos as 3 abas principais: Geral, Bondosos e Perfil
+  const tabs = [
+    { id: 'dashboard', label: 'Geral', icon: LayoutGrid },
+    { id: 'resellers', label: 'Bondosos', icon: Users },
+    { id: 'profile', label: 'Perfil', icon: User },
+  ];
+
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 bg-[#1e3a8a] border-t border-white/15 shadow-[0_-5px_15px_rgba(0,0,0,0.2)] md:hidden font-['Inter']">
-      <div className="flex justify-around items-center pt-2 pb-safe-offset-4 px-2 min-h-[75px]">
-        <button 
-          onClick={() => setActiveTab('dashboard')}
-          className={`flex flex-col items-center justify-center p-2 rounded-2xl w-1/3 min-h-[60px] ${activeTab === 'dashboard' ? 'text-[#cfa030]' : 'text-white/60 hover:text-white'} active:scale-95 transition-all duration-200`}
-        >
-          <LayoutDashboard className={`w-6 h-6 mb-1.5 ${activeTab === 'dashboard' ? 'stroke-2 text-[#cfa030]' : 'stroke-[1.5]'}`} />
-          <span className="text-[10px] font-bold tracking-wide uppercase">Visão Geral</span>
-        </button>
+    <nav className="fixed bottom-0 left-0 right-0 bg-[#1e3a8a] border-t border-white/10 px-4 py-3 flex items-center justify-around z-50 backdrop-blur-md pb-6 md:pb-4">
+      {tabs.map((tab) => {
+        const Icon = tab.icon;
+        const isActive = activeTab === tab.id;
 
-        <button 
-          onClick={() => setActiveTab('resellers')}
-          className={`flex flex-col items-center justify-center p-2 rounded-2xl w-1/3 min-h-[60px] ${activeTab === 'resellers' ? 'text-[#cfa030]' : 'text-white/60 hover:text-white'} active:scale-95 transition-all duration-200`}
-        >
-          <Users className={`w-6 h-6 mb-1.5 ${activeTab === 'resellers' ? 'stroke-2 text-[#cfa030]' : 'stroke-[1.5]'}`} />
-          <span className="text-[10px] font-bold tracking-wide uppercase">Revendedores</span>
-        </button>
+        return (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex flex-col items-center gap-1 transition-all duration-300 relative min-w-[80px] ${isActive ? 'text-[#cfa030] scale-110' : 'text-white/40 hover:text-white/60'
+              }`}
+          >
+            <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
+            <span className="text-[10px] font-black uppercase tracking-widest">
+              {tab.label}
+            </span>
 
-        <button 
-          onClick={() => setActiveTab('inventory')}
-          className={`flex flex-col items-center justify-center p-2 rounded-2xl w-1/3 min-h-[60px] ${activeTab === 'inventory' ? 'text-[#cfa030]' : 'text-white/60 hover:text-white'} active:scale-95 transition-all duration-200`}
-        >
-          <Search className={`w-6 h-6 mb-1.5 ${activeTab === 'inventory' ? 'stroke-2 text-[#cfa030]' : 'stroke-[1.5]'}`} />
-          <span className="text-[10px] font-bold tracking-wide uppercase">Busca</span>
-        </button>
-      </div>
+            {/* Indicador visual de aba ativa */}
+            {isActive && (
+              <div className="absolute -bottom-2 w-1.5 h-1.5 bg-[#cfa030] rounded-full shadow-[0_0_10px_#cfa030]" />
+            )}
+          </button>
+        );
+      })}
     </nav>
   );
 }
