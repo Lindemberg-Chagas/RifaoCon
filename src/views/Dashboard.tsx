@@ -75,7 +75,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
           </h2>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 bg-[#1e3a8a] text-white px-4 py-2.5 rounded-xl font-bold text-sm md:text-base shadow-md">
+            <div className="flex items-center gap-2 bg-[#5e85f0] text-white px-4 py-2.5 rounded-xl font-bold text-sm md:text-base shadow-md">
               <Calendar className="w-5 h-5 text-[#cfa030]" />
               <span>{currentRifa.startDate} — {currentRifa.endDate}</span>
             </div>
