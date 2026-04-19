@@ -5,7 +5,7 @@ import { Dashboard } from './views/Dashboard';
 import { Resellers } from './views/Resellers';
 import { Inventory } from './views/Inventory';
 import { Login } from './views/Login';
-import { Admin } from './views/Admin'; // <-- Importe o Admin aqui
+import Admin from './views/Admin';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
