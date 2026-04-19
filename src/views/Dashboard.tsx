@@ -84,7 +84,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
         {/* Card do Gráfico */}
         <div className="lg:col-span-8 bg-[#1e3a8a] p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl">
           <div className="flex justify-between items-center mb-8">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Status Tickets</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Status Rifas</h3>
             <div className="text-right">
               <p className="text-2xl font-black leading-none">20.000</p>
               <p className="text-[9px] font-bold text-[#cfa030] uppercase">Total</p>
