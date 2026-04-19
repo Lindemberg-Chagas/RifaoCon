@@ -57,12 +57,13 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
     if (b.status === 'paid') {
       acc.vendidos += (b.sold_tickets || 0);
       acc.apurado += (b.collected_amount || 0);
-      acc.ranking.set(b.name, (acc.ranking.get(b.name) || 0) + (b.sold_tickets || 0));
+      const current = acc.ranking.get(b.name) || 0;
+      acc.ranking.set(b.name, current + (b.sold_tickets || 0));
     } else {
       acc.pendentes += totalNoBloco;
     }
     return acc;
-  }, { vendidos: 0, pendentes: 0, apurado: 0, ranking: new Map() });
+  }, { vendidos: 0, pendentes: 0, apurado: 0, ranking: new Map<string, number>() });
 
   const disponiveis = Math.max(0, TOTAL_NUMEROS - stats.vendidos - stats.pendentes);
 
@@ -72,9 +73,11 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
     { name: 'RIFAS DISPONÍVEIS', value: disponiveis, color: '#1e3a8a' }
   ];
 
+  // Lógica do Ranking (Top 3)
   const topSellers = Array.from(stats.ranking.entries())
     .map(([name, sold]) => ({ name, sold }))
-    .sort((a, b) => b.sold - a.sold).slice(0, 3);
+    .sort((a, b) => b.sold - a.sold)
+    .slice(0, 3);
 
   if (isLoading) return <div className="flex-1 flex items-center justify-center min-h-[70vh] text-[#1e3a8a] font-black text-2xl uppercase animate-pulse">Sincronizando...</div>;
 
@@ -108,7 +111,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center font-black">
-                <span className="text-5xl">{Math.floor((stats.vendidos / TOTAL_NUMEROS) * 100)}%</span>
+                <span className="text-5xl">{TOTAL_NUMEROS > 0 ? Math.floor((stats.vendidos / TOTAL_NUMEROS) * 100) : 0}%</span>
               </div>
             </div>
 
@@ -127,12 +130,35 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
         </div>
 
         <div className="lg:col-span-4 flex flex-col gap-10">
+          {/* Card de Valor Arrecadado */}
           <div className="bg-[#cfa030] p-10 rounded-[3.5rem] shadow-xl text-[#1e3a8a]">
             <Wallet className="w-10 h-10 mb-4 opacity-40" />
             <p className="text-xs font-black uppercase">Arrecadado</p>
             <p className="text-5xl font-black tracking-tighter">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.apurado)}
             </p>
+          </div>
+
+          {/* RESTAURADO: Card de Performance (Ranking Top 3) */}
+          <div className="bg-[#5e85f0] p-10 rounded-[3.5rem] shadow-lg text-white">
+            <div className="flex items-center gap-4 mb-8">
+              <Trophy className="w-8 h-8 text-[#cfa030]" />
+              <h3 className="text-sm font-black uppercase text-white/50 tracking-widest">Performance</h3>
+            </div>
+            <div className="space-y-4">
+              {topSellers.map((s, i) => (
+                <div key={i} className="flex justify-between items-center p-6 bg-white/10 rounded-2xl border border-white/10">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] font-black text-[#cfa030] uppercase mb-1">{i + 1}º Lugar</span>
+                    <span className="text-lg font-bold truncate pr-2">{s.name}</span>
+                  </div>
+                  <span className="text-2xl font-black text-white shrink-0">{s.sold}</span>
+                </div>
+              ))}
+              {topSellers.length === 0 && (
+                <p className="text-center opacity-40 py-4 font-bold uppercase text-xs">Sem vendas nesta rifa</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
