@@ -32,7 +32,7 @@ export function Profile() {
           <div className="absolute bottom-1 right-1 bg-emerald-500 w-6 h-6 rounded-full border-4 border-[#1e3a8a]" />
         </div>
         <h2 className="mt-6 text-3xl font-black tracking-tight">{user.user_metadata.full_name}</h2>
-        <p className="text-[#cfa030] font-black uppercase tracking-[0.2em] text-[10px] mt-1">Super Admin // RifaoCon</p>
+        <p className="text-[#cfa030] font-black uppercase tracking-[0.2em] text-[10px] mt-1">Super Admin // Rifas Vendidas</p>
       </div>
 
       <div className="space-y-4">

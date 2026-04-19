@@ -24,7 +24,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
     <header className="bg-[#1e3a8a] text-white px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg border-b border-white/5">
       <div className="flex items-center gap-4">
         <Menu className="w-6 h-6 text-[#cfa030] cursor-pointer" />
-        <span className="text-xl font-black tracking-tighter uppercase">RifaoCon</span>
+        <span className="text-xl font-black tracking-tighter uppercase">Rifas Vendidas</span>
       </div>
 
       {/* Menu Desktop */}
