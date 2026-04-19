@@ -41,7 +41,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
   return (
     <div className="min-h-screen bg-slate-100 font-['Inter'] selection:bg-[#cfa030]/30">
 
-      <header className="bg-[#1e3a8a] text-white px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg border-b border-[#cfa030]/20">
+      <header className="bg-[#5e85f0] text-white px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg border-b border-[#cfa030]/20">
         <div className="flex items-center gap-4">
           <button className="p-2 hover:bg-white/10 rounded-xl transition-all">
             <Menu className="w-6 h-6 text-[#cfa030]" />
