@@ -39,7 +39,7 @@ export function Header({ activeTab, setActiveTab }: HeaderProps) {
           onClick={() => setActiveTab('resellers')}
           className={`text-xs font-black uppercase tracking-widest transition-colors ${activeTab === 'resellers' ? 'text-[#cfa030]' : 'text-white/60 hover:text-white'}`}
         >
-          Revendedores
+          Bondosos
         </button>
       </nav>
 
