@@ -6,6 +6,9 @@ export function Resellers() {
   const [bondososList, setBondososList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Novo Estado para o Campo de Busca
+  const [searchTerm, setSearchTerm] = useState('');
+
   // Estados do Modal de Cadastro
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -88,8 +91,6 @@ export function Resellers() {
     }
   };
 
-  // --- FUNÇÕES DA PRESTAÇÃO DE CONTAS ---
-
   const openAccountability = (bondoso: any) => {
     setSelectedBondoso(bondoso);
     setSoldTickets('');
@@ -129,6 +130,31 @@ export function Resellers() {
     }
   };
 
+  // --- LÓGICA DE FILTRAGEM (MOTOR DE BUSCA) ---
+  const filteredBondosos = bondososList.filter((bondoso) => {
+    const searchLower = searchTerm.toLowerCase().trim();
+    if (!searchLower) return true; // Se não tiver busca, mostra todos
+
+    // 1. Tenta achar no Nome do Bondoso
+    if (bondoso.name.toLowerCase().includes(searchLower)) return true;
+
+    // 2. Tenta achar no Número de WhatsApp
+    if (bondoso.phone && bondoso.phone.includes(searchLower)) return true;
+
+    // 3. Tenta achar se o número digitado está dentro da faixa do bondoso (ex: 508 dentro de 500-511)
+    const searchNum = parseInt(searchLower, 10);
+    if (!isNaN(searchNum) && bondoso.range) {
+      const [startStr, endStr] = bondoso.range.split(' - ');
+      if (startStr && endStr) {
+        const start = parseInt(startStr, 10);
+        const end = parseInt(endStr, 10);
+        if (searchNum >= start && searchNum <= end) return true;
+      }
+    }
+
+    return false;
+  });
+
   const previewStart = parseInt(newRangeStart, 10) || 0;
   const previewBlocks = parseInt(newBlockCount, 10) || 0;
   const previewEnd = previewBlocks > 0 ? previewStart + (previewBlocks * NUMEROS_POR_BLOCO) - 1 : 0;
@@ -139,7 +165,6 @@ export function Resellers() {
   return (
     <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 pt-28 md:pt-36 pb-32 md:pb-16 min-h-screen relative text-white">
 
-      {/* NOVO LAYOUT DO CABEÇALHO */}
       <div className="mb-8 md:mb-10 flex flex-col gap-4">
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white">Bondosos</h2>
         <div className="flex flex-wrap gap-2 md:gap-3">
@@ -165,8 +190,10 @@ export function Resellers() {
             <Search className="text-white/50 w-5 h-5 md:w-6 md:h-6" />
           </div>
           <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-[#1e3a8a] border border-white/20 rounded-xl py-4 md:py-5 pl-12 md:pl-16 pr-4 md:pr-6 text-base md:text-lg focus:ring-2 focus:ring-[#cfa030] transition-all duration-200 placeholder:text-white/30 outline-none block font-medium text-white shadow-inner"
-            placeholder="Digite o número (ex: 00508) para checar o bondoso..."
+            placeholder="Digite o número (ex: 00508) ou o nome do bondoso..."
             type="text"
           />
         </div>
@@ -185,12 +212,14 @@ export function Resellers() {
             <div className="animate-spin w-8 h-8 border-4 border-[#cfa030] border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="text-white/50 font-bold uppercase tracking-widest text-xs">Carregando do banco...</p>
           </div>
-        ) : bondososList.length === 0 ? (
+        ) : filteredBondosos.length === 0 ? (
           <div className="text-center py-10 bg-[#1e3a8a] rounded-xl border border-white/10">
-            <p className="text-white/50 font-bold uppercase tracking-widest text-sm">Nenhum bondoso cadastrado ainda.</p>
+            <p className="text-white/50 font-bold uppercase tracking-widest text-sm">
+              {searchTerm ? 'Nenhum bondoso encontrado para esta busca.' : 'Nenhum bondoso cadastrado ainda.'}
+            </p>
           </div>
         ) : (
-          bondososList.map((reseller, i) => (
+          filteredBondosos.map((reseller, i) => (
             <div key={reseller.id || i} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center px-4 md:px-5 py-4 bg-[#1e3a8a] rounded-xl border border-white/20 hover:border-[#cfa030]/50 transition-all shadow-sm group">
 
               <div className="w-full md:col-span-4 flex items-center gap-3 mb-3 md:mb-0">
@@ -245,7 +274,7 @@ export function Resellers() {
       </div>
 
       <div className="mt-8 md:mt-12 text-center pb-8 md:pb-0">
-        <p className="text-xs md:text-sm font-bold text-white/30 tracking-[0.1em] uppercase">Fim da Lista — {bondososList.length} Registros</p>
+        <p className="text-xs md:text-sm font-bold text-white/30 tracking-[0.1em] uppercase">Fim da Lista — {filteredBondosos.length} Registros</p>
       </div>
 
       <button
