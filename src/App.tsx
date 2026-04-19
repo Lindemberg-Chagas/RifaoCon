@@ -16,11 +16,9 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleSession(session);
     });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       handleSession(session);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -52,7 +50,8 @@ export default function App() {
   if (!isAuthenticated) return <Login />;
 
   return (
-    <div className="bg-[#1e3a8a] min-h-screen flex flex-col font-sans">
+    // MUDANÇA: fundo agora é bg-slate-50 para contraste com o branco puro
+    <div className="bg-slate-50 min-h-screen flex flex-col font-sans">
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="flex-1 overflow-x-hidden">
