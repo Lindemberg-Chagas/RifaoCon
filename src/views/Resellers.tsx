@@ -7,7 +7,7 @@ export function Resellers() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Novo estado para o nosso Alerta Customizado da RifaoCon
+  // Novo estado para o nosso Alerta Customizado da Rifas Vendidas
   const [customAlert, setCustomAlert] = useState<string | null>(null);
 
   // Estados do Modal de Cadastro
@@ -428,12 +428,12 @@ export function Resellers() {
         </div>
       )}
 
-      {/* --- MODAL 3: ALERTA CUSTOMIZADO DA RIFAOCON --- */}
+      {/* --- MODAL 3: ALERTA CUSTOMIZADO DA Rifas Vendidas --- */}
       {customAlert && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="bg-[#1e3a8a] px-6 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-black text-white">Sistema RifaoCon diz:</h3>
+              <h3 className="text-lg font-black text-white">Sistema Rifas Vendidas diz:</h3>
               <button onClick={() => setCustomAlert(null)} className="text-white/70 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
