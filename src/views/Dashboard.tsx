@@ -75,7 +75,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
         {/* Card Principal agora em Azul Claro (#5e85f0) */}
         <div className="lg:col-span-8 bg-[#5e85f0] p-10 md:p-14 rounded-[3.5rem] shadow-2xl text-white">
           <div className="flex justify-between items-center mb-12">
-            <h2 className="text-base font-black uppercase tracking-[0.5em] text-[#cfa030]">Status Rifas</h2>
+            <h2 className="text-2xl font-black uppercase tracking-[0.5em] text-[#cfa030]">Status Rifas</h2>
             <div className="text-right">
               <p className="text-4xl font-black">{TOTAL_NUMEROS.toLocaleString('pt-BR')}</p>
               <p className="text-xs font-bold text-white/40 uppercase">Total</p>
