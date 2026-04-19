@@ -21,17 +21,16 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
     { name: 'Disponíveis', value: 5000, color: '#1e3a8a' }
   ];
 
-  // --- NOVOS DADOS SIMULADOS PARA AS MÉTRICAS ---
   const salesStats = {
-    totalApurado: 50000, // Valor em R$ já recebido
-    rifasVendidas: 10000, // Quantidade de números avulsos vendidos
-    blocosVendidos: 400,  // Quantidade de blocos (ex: carnês de 25) vendidos
+    totalApurado: 50000,
+    rifasVendidas: 10000,
+    blocosVendidos: 400,
   };
 
   const topSellers = [
-    { name: 'Maria Aparecida', sold: 450, color: '#cfa030' }, // 1º Ouro
-    { name: 'João Paulo', sold: 320, color: '#94a3b8' },     // 2º Prata
-    { name: 'Ana Costa', sold: 280, color: '#b45309' }       // 3º Bronze
+    { name: 'Maria Aparecida', sold: 450, color: '#cfa030' },
+    { name: 'João Paulo', sold: 320, color: '#94a3b8' },
+    { name: 'Ana Costa', sold: 280, color: '#b45309' }
   ];
 
   const currentHour = new Date().getHours();
@@ -42,7 +41,6 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
   return (
     <div className="min-h-screen bg-slate-100 font-['Inter'] selection:bg-[#cfa030]/30">
 
-      {/* Navbar Superior de Alto Contraste */}
       <header className="bg-[#1e3a8a] text-white px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg border-b border-[#cfa030]/20">
         <div className="flex items-center gap-4">
           <button className="p-2 hover:bg-white/10 rounded-xl transition-all">
@@ -65,19 +63,13 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
 
       <main className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-24 w-full">
 
-        {/* Saudação */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-[#1e3a8a] tracking-tight leading-tight">
             Olá, Lindemberg. <span className="text-[#cfa030] drop-shadow-sm">{greeting}!</span>
           </h1>
         </div>
 
-        {/* Secção do Título - Fundo Claro e Texto Escuro */}
         <section className="mb-8 bg-white p-6 md:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200">
-          <div className="flex items-center gap-2.5 mb-3">
-            <span className="w-3 h-3 rounded-full bg-[#cfa030] animate-pulse"></span>
-            <span className="font-bold text-sm tracking-[0.15em] uppercase text-[#cfa030]">Edição Ativa</span>
-          </div>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-[#1e3a8a] leading-[1.1] uppercase break-words hyphens-auto">
             {currentRifa.name}
           </h2>
@@ -90,11 +82,9 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
           </div>
         </section>
 
-        {/* Bento Grid Técnico */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* Gráfico Principal com Fundo Azul Escuro */}
-          <div className="lg:col-span-8 bg-[#4873e8] p-6 md:p-10 rounded-[2rem] border border-[#cfa030]/20 shadow-lg relative overflow-hidden">
+          <div className="lg:col-span-8 bg-[#1e3a8a] p-6 md:p-10 rounded-[2rem] border border-[#cfa030]/20 shadow-lg relative overflow-hidden">
             <div className="flex justify-between items-center mb-10">
               <h3 className="text-sm font-black tracking-widest text-white/50 uppercase">Distribuição de Números</h3>
               <div className="text-right">
@@ -120,9 +110,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#fff', color: '#1e3a8a' }}
-                    />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#fff', color: '#1e3a8a' }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -137,19 +125,15 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
                       <div className="w-4 h-4 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)]" style={{ backgroundColor: item.color }}></div>
                       <span className="text-sm font-bold text-white uppercase tracking-wide">{item.name}</span>
                     </div>
-                    <span className="text-lg font-black text-white">
-                      {(item.value / 1000).toFixed(1)}k
-                    </span>
+                    <span className="text-lg font-black text-white">{(item.value / 1000).toFixed(1)}k</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Coluna da Direita: Métricas de Vendas e Ranking */}
           <div className="lg:col-span-4 flex flex-col gap-6">
 
-            {/* 1. Total Apurado (Destaque Financeiro) */}
             <div className="bg-[#1e3a8a] p-6 rounded-[2rem] shadow-lg relative overflow-hidden group">
               <Wallet className="absolute -right-4 -bottom-4 text-white/5 w-32 h-32 transition-transform group-hover:scale-110 duration-500" />
               <p className="text-xs font-black text-[#cfa030] uppercase tracking-widest mb-1 relative z-10">Total Apurado</p>
@@ -160,7 +144,6 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
               </div>
             </div>
 
-            {/* 2. Volumes: Rifas e Blocos Vendidos (Lado a Lado) */}
             <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex gap-4 divide-x divide-slate-100">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
@@ -179,7 +162,6 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
               </div>
             </div>
 
-            {/* 3. Ranking Top 3 Vendedores */}
             <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
               <div className="flex items-center gap-2 mb-5">
                 <Trophy className="w-5 h-5 text-[#cfa030]" />
@@ -190,9 +172,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
                 {topSellers.map((seller, index) => (
                   <div key={index} className="flex justify-between items-center bg-slate-50 p-3 px-4 rounded-xl border border-slate-100">
                     <div className="flex items-center gap-3">
-                      <span className="font-black text-lg" style={{ color: seller.color }}>
-                        {index + 1}º
-                      </span>
+                      <span className="font-black text-lg" style={{ color: seller.color }}>{index + 1}º</span>
                       <span className="text-sm font-bold text-[#1e3a8a]">{seller.name}</span>
                     </div>
                     <div className="text-right">
@@ -205,7 +185,6 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
             </div>
 
           </div>
-
         </div>
       </main>
     </div>
