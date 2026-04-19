@@ -1,14 +1,11 @@
 import { Search, Plus, MessageCircle, MoreHorizontal, Ticket, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase'; // Importando a conexão com o banco!
 
 export function Resellers() {
-  const [bondososList, setBondososList] = useState([
-    { name: 'Anderson Silva', phone: '85999999999', range: '00500 - 00512', status: 'paid', statusLabel: 'Tudo Pago' },
-    { name: 'Beatriz Santos', phone: '85988888888', range: '01050 - 01070', status: 'pending', statusLabel: 'Pendente' },
-    { name: 'Carlos Eduardo', phone: '85977777777', range: '03110 - 03130', status: 'paid', statusLabel: 'Tudo Pago' },
-    { name: 'Daniela Moreira', phone: '85966666666', range: '04000 - 04025', status: 'pending', statusLabel: 'Pendente' },
-    { name: 'Fábio Júnior', phone: '85955555555', range: '08900 - 08910', status: 'paid', statusLabel: 'Tudo Pago' },
-  ]);
+  // Agora a lista começa vazia, pois virá do banco
+  const [bondososList, setBondososList] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -16,34 +13,42 @@ export function Resellers() {
   const [newBlockCount, setNewBlockCount] = useState('');
   const [newRangeStart, setNewRangeStart] = useState('');
 
-  // CONFIGURAÇÃO: 12 números por bloco
   const NUMEROS_POR_BLOCO = 12;
 
-  // Função para aplicar a máscara de telefone dinamicamente: (XX) XXXXX-XXXX
+  // Carrega os dados do Supabase assim que a tela abre
+  useEffect(() => {
+    fetchBondosos();
+  }, []);
+
+  const fetchBondosos = async () => {
+    setIsLoading(true);
+    // Busca na tabela 'bondosos' ordenando pelos mais recentes
+    const { data, error } = await supabase
+      .from('bondosos')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Erro ao buscar dados:", error);
+    } else {
+      setBondososList(data || []);
+    }
+    setIsLoading(false);
+  };
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
 
-    // Limita a 11 dígitos (DDD 2 + Número 9)
-    if (value.length > 11) {
-      value = value.slice(0, 11);
-    }
-
-    // Aplica a formatação visual
     let formattedValue = value;
-    if (value.length > 2) {
-      formattedValue = `(${value.slice(0, 2)}) ${value.slice(2)}`;
-    }
-    if (value.length > 7) {
-      formattedValue = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
-    }
+    if (value.length > 2) formattedValue = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    if (value.length > 7) formattedValue = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
 
     setNewPhone(formattedValue);
   };
 
-  const handleAddBondoso = (e: React.FormEvent) => {
+  const handleAddBondoso = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Removemos a formatação visual para validar quantos números reais foram digitados
     const phoneDigits = newPhone.replace(/\D/g, '');
 
     if (!newName || !phoneDigits || !newBlockCount || !newRangeStart) {
@@ -63,21 +68,35 @@ export function Resellers() {
     const startFormatted = String(startNum).padStart(5, '0');
     const endFormatted = String(endNum).padStart(5, '0');
 
+    // Objeto formatado para o Supabase (nomes batem com a tabela criada)
     const newBondoso = {
       name: newName,
-      phone: phoneDigits, // Salva apenas os números limpos para a URL do WhatsApp
+      phone: phoneDigits,
       range: `${startFormatted} - ${endFormatted}`,
       status: 'pending',
-      statusLabel: 'Pendente'
+      status_label: 'Pendente'
     };
 
-    setBondososList([newBondoso, ...bondososList]);
+    // Salvando no Banco de Dados Real!
+    const { data, error } = await supabase
+      .from('bondosos')
+      .insert([newBondoso])
+      .select();
 
-    setNewName('');
-    setNewPhone('');
-    setNewBlockCount('');
-    setNewRangeStart('');
-    setIsModalOpen(false);
+    if (error) {
+      console.error("Erro ao salvar:", error);
+      alert("Erro ao salvar no banco de dados.");
+    } else if (data) {
+      // Adiciona o novo registro salvo no topo da lista na tela
+      setBondososList([data[0], ...bondososList]);
+
+      // Limpa os campos
+      setNewName('');
+      setNewPhone('');
+      setNewBlockCount('');
+      setNewRangeStart('');
+      setIsModalOpen(false);
+    }
   };
 
   const previewStart = parseInt(newRangeStart, 10) || 0;
@@ -128,44 +147,56 @@ export function Resellers() {
           <div className="col-span-2 text-right pr-2">Ações</div>
         </div>
 
-        {bondososList.map((reseller, i) => (
-          <div key={i} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center px-4 md:px-5 py-4 bg-[#1e3a8a] rounded-xl border border-white/20 hover:border-[#cfa030]/50 transition-all shadow-sm group">
-
-            <div className="w-full md:col-span-4 flex items-center gap-3 mb-3 md:mb-0">
-              <div className="w-10 h-10 rounded-full bg-[#1e3a8a] text-white border border-white/30 group-hover:border-[#cfa030]/50 flex items-center justify-center font-bold text-lg shrink-0 transition-colors">
-                {reseller.name.charAt(0)}
-              </div>
-              <p className="font-bold text-base text-white truncate">{reseller.name}</p>
-            </div>
-
-            <div className="w-full md:col-span-3 flex items-center mb-3 md:mb-0">
-              <div className="flex items-center gap-2 bg-[#1e3a8a] border border-white/10 px-3 py-1.5 rounded-lg text-white/80 font-mono text-sm max-w-fit">
-                <Ticket className="w-4 h-4 text-[#cfa030]" />
-                {reseller.range}
-              </div>
-            </div>
-
-            <div className="w-full md:col-span-3 flex items-center mb-3 md:mb-0 md:pl-2">
-              <span className={`px-3 py-1.5 text-[10px] md:text-xs font-black uppercase tracking-widest rounded-lg border ${reseller.status === 'paid' ? 'bg-transparent text-white border-white/40' : 'bg-[#cfa030] text-[#1e3a8a] border-[#cfa030]'}`}>
-                {reseller.statusLabel}
-              </span>
-            </div>
-
-            <div className="w-full md:col-span-2 flex justify-end gap-2 border-t border-white/10 md:border-none pt-3 md:pt-0">
-              <button
-                onClick={() => window.open(`https://wa.me/55${reseller.phone}?text=Olá ${reseller.name}, estou entrando em contato sobre a rifa...`, '_blank')}
-                className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 bg-[#1e3a8a] border border-[#cfa030]/30 hover:border-[#cfa030] hover:bg-[#cfa030]/10 text-[#cfa030] rounded-lg transition-all font-bold text-xs uppercase"
-                title="Mensagem no WhatsApp"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span className="md:hidden">Lembrar</span>
-              </button>
-              <button className="flex items-center justify-center px-2 py-2 bg-[#1e3a8a] border border-white/10 hover:bg-white/10 text-white/70 rounded-lg transition-all" title="Mais opções">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-            </div>
+        {/* Loading state enquanto busca do Supabase */}
+        {isLoading ? (
+          <div className="text-center py-10">
+            <div className="animate-spin w-8 h-8 border-4 border-[#cfa030] border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-white/50 font-bold uppercase tracking-widest text-xs">Carregando do banco...</p>
           </div>
-        ))}
+        ) : bondososList.length === 0 ? (
+          <div className="text-center py-10 bg-[#1e3a8a] rounded-xl border border-white/10">
+            <p className="text-white/50 font-bold uppercase tracking-widest text-sm">Nenhum bondoso cadastrado ainda.</p>
+          </div>
+        ) : (
+          bondososList.map((reseller, i) => (
+            <div key={reseller.id || i} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center px-4 md:px-5 py-4 bg-[#1e3a8a] rounded-xl border border-white/20 hover:border-[#cfa030]/50 transition-all shadow-sm group">
+
+              <div className="w-full md:col-span-4 flex items-center gap-3 mb-3 md:mb-0">
+                <div className="w-10 h-10 rounded-full bg-[#1e3a8a] text-white border border-white/30 group-hover:border-[#cfa030]/50 flex items-center justify-center font-bold text-lg shrink-0 transition-colors uppercase">
+                  {reseller.name.charAt(0)}
+                </div>
+                <p className="font-bold text-base text-white truncate">{reseller.name}</p>
+              </div>
+
+              <div className="w-full md:col-span-3 flex items-center mb-3 md:mb-0">
+                <div className="flex items-center gap-2 bg-[#1e3a8a] border border-white/10 px-3 py-1.5 rounded-lg text-white/80 font-mono text-sm max-w-fit">
+                  <Ticket className="w-4 h-4 text-[#cfa030]" />
+                  {reseller.range}
+                </div>
+              </div>
+
+              <div className="w-full md:col-span-3 flex items-center mb-3 md:mb-0 md:pl-2">
+                <span className={`px-3 py-1.5 text-[10px] md:text-xs font-black uppercase tracking-widest rounded-lg border ${reseller.status === 'paid' ? 'bg-transparent text-white border-white/40' : 'bg-[#cfa030] text-[#1e3a8a] border-[#cfa030]'}`}>
+                  {reseller.status_label}
+                </span>
+              </div>
+
+              <div className="w-full md:col-span-2 flex justify-end gap-2 border-t border-white/10 md:border-none pt-3 md:pt-0">
+                <button
+                  onClick={() => window.open(`https://wa.me/55${reseller.phone}?text=Olá ${reseller.name}, estou entrando em contato sobre a rifa...`, '_blank')}
+                  className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 bg-[#1e3a8a] border border-[#cfa030]/30 hover:border-[#cfa030] hover:bg-[#cfa030]/10 text-[#cfa030] rounded-lg transition-all font-bold text-xs uppercase"
+                  title="Mensagem no WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="md:hidden">Lembrar</span>
+                </button>
+                <button className="flex items-center justify-center px-2 py-2 bg-[#1e3a8a] border border-white/10 hover:bg-white/10 text-white/70 rounded-lg transition-all" title="Mais opções">
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       <div className="mt-8 md:mt-12 text-center pb-8 md:pb-0">
@@ -180,7 +211,6 @@ export function Resellers() {
         <Plus className="w-6 h-6 md:w-8 md:h-8 stroke-[2.5]" />
       </button>
 
-      {/* Modal de Cadastro de Novo Bondoso */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -210,9 +240,9 @@ export function Resellers() {
                 <input
                   type="tel"
                   value={newPhone}
-                  onChange={handlePhoneChange} // Trocado para usar nossa função de máscara
+                  onChange={handlePhoneChange}
                   placeholder="Ex: (85) 99999-9999"
-                  maxLength={15} // Limite de caracteres com a formatação
+                  maxLength={15}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
                   required
                 />
