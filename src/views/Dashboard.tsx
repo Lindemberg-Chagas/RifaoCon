@@ -1,11 +1,15 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Package, Calendar, Menu, Trophy, Wallet, Ticket } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface DashboardProps {
   setActiveTab: (tab: string) => void;
 }
 
 export function Dashboard({ setActiveTab }: DashboardProps) {
+  const [bondososList, setBondososList] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const currentRifa = {
     id: 1,
@@ -15,23 +19,83 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
     isActive: true
   };
 
+  const TOTAL_NUMEROS = 20000;
+
+  useEffect(() => {
+    fetchDados();
+  }, []);
+
+  const fetchDados = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('bondosos')
+      .select('*');
+
+    if (error) {
+      console.error("Erro ao buscar dados do Dashboard:", error);
+    } else {
+      setBondososList(data || []);
+    }
+    setIsLoading(false);
+  };
+
+  // --- MATEMÁTICA DO DASHBOARD ---
+  let totalVendidos = 0;
+  let totalComRevendedores = 0;
+  let totalApurado = 0;
+  let blocosVendidos = 0;
+
+  // Mapa para calcular o ranking (soma vendas da mesma pessoa se ela pegar mais de um bloco)
+  const rankingMap = new Map<string, number>();
+
+  bondososList.forEach(b => {
+    // Descobre quantos números tem no bloco que a pessoa pegou
+    let totalNoBloco = 0;
+    if (b.range) {
+      const [startStr, endStr] = b.range.split(' - ');
+      const start = parseInt(startStr, 10) || 0;
+      const end = parseInt(endStr, 10) || 0;
+      totalNoBloco = (end - start + 1);
+    }
+
+    if (b.status === 'paid') {
+      totalVendidos += (b.sold_tickets || 0);
+      totalApurado += (b.collected_amount || 0);
+      blocosVendidos += (totalNoBloco / 12); // Calcula os blocos baseados no intervalo
+
+      // Adiciona ao ranking
+      if (b.sold_tickets > 0) {
+        const atual = rankingMap.get(b.name) || 0;
+        rankingMap.set(b.name, atual + b.sold_tickets);
+      }
+    } else if (b.status === 'pending') {
+      totalComRevendedores += totalNoBloco;
+    }
+  });
+
+  const disponiveis = Math.max(0, TOTAL_NUMEROS - totalVendidos - totalComRevendedores);
+
   const chartData = [
-    { name: 'Vendidos', value: 10000, color: '#cfa030' },
-    { name: 'Com Revendedores', value: 5000, color: '#ffffff' },
-    { name: 'Disponíveis', value: 5000, color: '#1e3a8a' }
+    { name: 'Vendidos', value: totalVendidos, color: '#cfa030' },
+    { name: 'Com Revendedores', value: totalComRevendedores, color: '#ffffff' },
+    { name: 'Disponíveis', value: disponiveis, color: '#1e3a8a' }
   ];
 
   const salesStats = {
-    totalApurado: 50000,
-    rifasVendidas: 10000,
-    blocosVendidos: 400,
+    totalApurado: totalApurado,
+    rifasVendidas: totalVendidos,
+    blocosVendidos: Math.ceil(blocosVendidos),
   };
 
-  const topSellers = [
-    { name: 'Maria Aparecida', sold: 450, color: '#cfa030' },
-    { name: 'João Paulo', sold: 320, color: '#94a3b8' },
-    { name: 'Ana Costa', sold: 280, color: '#b45309' }
-  ];
+  // Transforma o Mapa em Array, ordena do maior pro menor e pega os 3 primeiros
+  const topSellers = Array.from(rankingMap.entries())
+    .map(([name, sold]) => ({ name, sold }))
+    .sort((a, b) => b.sold - a.sold)
+    .slice(0, 3)
+    .map((seller, index) => ({
+      ...seller,
+      color: index === 0 ? '#cfa030' : index === 1 ? '#94a3b8' : '#b45309' // Ouro, Prata, Bronze
+    }));
 
   const currentHour = new Date().getHours();
   let greeting = 'Boa noite';
@@ -88,7 +152,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
             <div className="flex justify-between items-center mb-10">
               <h3 className="text-sm font-black tracking-widest text-white/50 uppercase">Quantidade de Números</h3>
               <div className="text-right">
-                <span className="block text-2xl font-black text-white leading-none">20.000</span>
+                <span className="block text-2xl font-black text-white leading-none">{(TOTAL_NUMEROS / 1000).toFixed(0)}.000</span>
                 <span className="text-[10px] font-bold text-[#cfa030] uppercase tracking-widest">Total</span>
               </div>
             </div>
@@ -110,11 +174,14 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#fff', color: '#1e3a8a' }} />
+                    <Tooltip
+                      formatter={(value: number) => [value, 'Números']}
+                      contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#fff', color: '#1e3a8a', fontWeight: 'bold' }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-black text-white mt-1">20k</span>
+                  <span className="text-3xl font-black text-white mt-1">{(TOTAL_NUMEROS / 1000).toFixed(0)}k</span>
                 </div>
               </div>
 
@@ -125,7 +192,9 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
                       <div className="w-4 h-4 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)]" style={{ backgroundColor: item.color }}></div>
                       <span className="text-sm font-bold text-white uppercase tracking-wide">{item.name}</span>
                     </div>
-                    <span className="text-lg font-black text-white">{(item.value / 1000).toFixed(1)}k</span>
+                    <span className="text-lg font-black text-white">
+                      {item.value >= 1000 ? `${(item.value / 1000).toFixed(1).replace('.0', '')}k` : item.value}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -139,8 +208,12 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
               <p className="text-xs font-black text-[#cfa030] uppercase tracking-widest mb-1 relative z-10">Total Apurado</p>
               <div className="flex items-baseline gap-2 text-white relative z-10">
                 <span className="text-xl font-bold opacity-60">R$</span>
-                <span className="text-4xl font-black tracking-tight">{salesStats.totalApurado.toLocaleString('pt-BR')}</span>
-                <span className="text-lg font-bold opacity-60">,00</span>
+                <span className="text-4xl font-black tracking-tight">
+                  {Math.floor(salesStats.totalApurado).toLocaleString('pt-BR')}
+                </span>
+                <span className="text-lg font-bold opacity-60">
+                  ,{salesStats.totalApurado.toFixed(2).split('.')[1]}
+                </span>
               </div>
             </div>
 
@@ -165,23 +238,29 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
             <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
               <div className="flex items-center gap-2 mb-5">
                 <Trophy className="w-5 h-5 text-[#cfa030]" />
-                <h3 className="text-sm font-black text-[#1e3a8a] uppercase tracking-widest">Top 3 Vendedores</h3>
+                <h3 className="text-sm font-black text-[#1e3a8a] uppercase tracking-widest">Top Vendedores</h3>
               </div>
 
-              <div className="flex flex-col gap-3">
-                {topSellers.map((seller, index) => (
-                  <div key={index} className="flex justify-between items-center bg-slate-50 p-3 px-4 rounded-xl border border-slate-100">
-                    <div className="flex items-center gap-3">
-                      <span className="font-black text-lg" style={{ color: seller.color }}>{index + 1}º</span>
-                      <span className="text-sm font-bold text-[#1e3a8a]">{seller.name}</span>
+              {topSellers.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">Nenhuma venda ainda.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {topSellers.map((seller, index) => (
+                    <div key={index} className="flex justify-between items-center bg-slate-50 p-3 px-4 rounded-xl border border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <span className="font-black text-lg" style={{ color: seller.color }}>{index + 1}º</span>
+                        <span className="text-sm font-bold text-[#1e3a8a]">{seller.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-sm font-black text-[#1e3a8a] leading-none">{seller.sold}</span>
+                        <span className="text-[9px] uppercase font-bold text-slate-400">rifas</span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="block text-sm font-black text-[#1e3a8a] leading-none">{seller.sold}</span>
-                      <span className="text-[9px] uppercase font-bold text-slate-400">rifas</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
           </div>
