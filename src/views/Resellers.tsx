@@ -10,37 +10,62 @@ export function Resellers() {
     { name: 'Fábio Júnior', phone: '85955555555', range: '08900 - 08910', status: 'paid', statusLabel: 'Tudo Pago' },
   ]);
 
-  // Estados do Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newBlockCount, setNewBlockCount] = useState('');
   const [newRangeStart, setNewRangeStart] = useState('');
 
-  // CONFIGURAÇÃO: Quantos números tem em 1 bloco impresso?
-  const NUMEROS_POR_BLOCO = 12; // <-- Alterado para 12
+  // CONFIGURAÇÃO: 12 números por bloco
+  const NUMEROS_POR_BLOCO = 12;
+
+  // Função para aplicar a máscara de telefone dinamicamente: (XX) XXXXX-XXXX
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
+
+    // Limita a 11 dígitos (DDD 2 + Número 9)
+    if (value.length > 11) {
+      value = value.slice(0, 11);
+    }
+
+    // Aplica a formatação visual
+    let formattedValue = value;
+    if (value.length > 2) {
+      formattedValue = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    }
+    if (value.length > 7) {
+      formattedValue = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+    }
+
+    setNewPhone(formattedValue);
+  };
 
   const handleAddBondoso = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newName || !newPhone || !newBlockCount || !newRangeStart) {
+    // Removemos a formatação visual para validar quantos números reais foram digitados
+    const phoneDigits = newPhone.replace(/\D/g, '');
+
+    if (!newName || !phoneDigits || !newBlockCount || !newRangeStart) {
       alert("Por favor, preencha todos os campos.");
+      return;
+    }
+
+    if (phoneDigits.length < 10) {
+      alert("Por favor, insira um número de WhatsApp válido com DDD.");
       return;
     }
 
     const startNum = parseInt(newRangeStart, 10);
     const blocks = parseInt(newBlockCount, 10);
-
-    // Cálculo automático do número final
     const endNum = startNum + (blocks * NUMEROS_POR_BLOCO) - 1;
 
-    // Formatação com zeros à esquerda (ex: 50 -> 00050)
     const startFormatted = String(startNum).padStart(5, '0');
     const endFormatted = String(endNum).padStart(5, '0');
 
     const newBondoso = {
       name: newName,
-      phone: newPhone.replace(/\D/g, ''), // Salva apenas os números do WhatsApp
+      phone: phoneDigits, // Salva apenas os números limpos para a URL do WhatsApp
       range: `${startFormatted} - ${endFormatted}`,
       status: 'pending',
       statusLabel: 'Pendente'
@@ -48,7 +73,6 @@ export function Resellers() {
 
     setBondososList([newBondoso, ...bondososList]);
 
-    // Limpa o form
     setNewName('');
     setNewPhone('');
     setNewBlockCount('');
@@ -56,7 +80,6 @@ export function Resellers() {
     setIsModalOpen(false);
   };
 
-  // Lógica para mostrar a prévia do intervalo gerado no modal
   const previewStart = parseInt(newRangeStart, 10) || 0;
   const previewBlocks = parseInt(newBlockCount, 10) || 0;
   const previewEnd = previewBlocks > 0 ? previewStart + (previewBlocks * NUMEROS_POR_BLOCO) - 1 : 0;
@@ -66,7 +89,6 @@ export function Resellers() {
 
   return (
     <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 pt-28 md:pt-36 pb-32 md:pb-16 min-h-screen relative text-white">
-      {/* Section Header */}
       <div className="mb-8 md:mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
         <div>
           <span className="text-[#60a5fa] font-label text-xs md:text-sm tracking-[0.15em] uppercase font-bold mb-2 block">Gerenciamento // v2.4</span>
@@ -84,7 +106,6 @@ export function Resellers() {
         </div>
       </div>
 
-      {/* Main Specialized Search Field */}
       <div className="mb-8 md:mb-10 bg-[#1e3a8a] p-6 md:p-8 rounded-xl shadow-lg border border-white/20">
         <label className="text-xs md:text-sm font-black text-white/70 uppercase tracking-widest block mb-3">Busca Rápida de Número</label>
         <div className="relative">
@@ -99,7 +120,6 @@ export function Resellers() {
         </div>
       </div>
 
-      {/* CRM List */}
       <div className="space-y-3 md:space-y-4">
         <div className="hidden md:grid grid-cols-12 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-[#cfa030] border-b border-[#cfa030]/20 mb-2">
           <div className="col-span-4">Nome do Bondoso</div>
@@ -167,20 +187,14 @@ export function Resellers() {
 
             <div className="bg-[#1e3a8a] px-6 py-4 flex items-center justify-between">
               <h3 className="text-xl font-black text-white">Novo Bondoso</h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-white/70 hover:text-white transition-colors"
-              >
+              <button onClick={() => setIsModalOpen(false)} className="text-white/70 hover:text-white transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             <form onSubmit={handleAddBondoso} className="p-6">
-
               <div className="mb-4">
-                <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
-                  Nome Completo
-                </label>
+                <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">Nome Completo</label>
                 <input
                   type="text"
                   value={newName}
@@ -192,14 +206,13 @@ export function Resellers() {
               </div>
 
               <div className="mb-5">
-                <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
-                  WhatsApp
-                </label>
+                <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">WhatsApp</label>
                 <input
                   type="tel"
                   value={newPhone}
-                  onChange={(e) => setNewPhone(e.target.value)}
+                  onChange={handlePhoneChange} // Trocado para usar nossa função de máscara
                   placeholder="Ex: (85) 99999-9999"
+                  maxLength={15} // Limite de caracteres com a formatação
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[#1e3a8a] font-medium outline-none focus:border-[#cfa030] focus:ring-1 focus:ring-[#cfa030] transition-all"
                   required
                 />
@@ -207,9 +220,7 @@ export function Resellers() {
 
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div>
-                  <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
-                    Qtd. de Blocos
-                  </label>
+                  <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">Qtd. de Blocos</label>
                   <input
                     type="number"
                     value={newBlockCount}
@@ -221,9 +232,7 @@ export function Resellers() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">
-                    Número Inicial
-                  </label>
+                  <label className="block text-[#1e3a8a] text-xs font-bold uppercase tracking-widest mb-2">Número Inicial</label>
                   <input
                     type="number"
                     value={newRangeStart}
@@ -236,7 +245,6 @@ export function Resellers() {
                 </div>
               </div>
 
-              {/* Preview Dinâmico do Intervalo */}
               <div className="mb-8 bg-slate-100 rounded-xl py-3 px-4 flex items-center justify-between border border-slate-200 border-dashed">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Faixa Gerada</span>
                 <span className="text-[#1e3a8a] font-mono font-black text-sm">{previewText}</span>
@@ -247,15 +255,11 @@ export function Resellers() {
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors"
-                >
-                  Cancelar
-                </button>
+                >Cancelar</button>
                 <button
                   type="submit"
                   className="flex-1 px-4 py-3 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] font-black rounded-xl transition-colors shadow-md"
-                >
-                  Salvar Bondoso
-                </button>
+                >Salvar Bondoso</button>
               </div>
             </form>
           </div>
