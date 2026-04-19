@@ -1,26 +1,34 @@
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
-
-interface LoginProps {
-  onLogin: () => void;
-}
-
-export function Login({ onLogin }: LoginProps) {
+// Removemos a prop onLogin daqui porque o App.tsx vai identificar o login automaticamente
+export function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setIsLoading(true);
-    // Simula o tempo de autenticação e transição
-    setTimeout(() => {
-      onLogin();
-    }, 1500);
+    try {
+      // Chama a tela de autenticação do Google
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin // Volta para o app após o login
+        }
+      });
+      if (error) throw error;
+
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      alert('Erro ao tentar conectar com o Google.');
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#1e3a8a] flex flex-col items-center justify-between p-6 md:p-12 font-['Inter'] relative overflow-hidden text-white">
 
-      {/* Elementos decorativos de fundo (Blur) */}
+      {/* Elementos decorativos de fundo */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-[#cfa030]/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#cfa030]/5 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
 
@@ -28,14 +36,11 @@ export function Login({ onLogin }: LoginProps) {
 
         {/* Branding - RifaoCon */}
         <div className="flex flex-col items-center text-center mb-10">
-
-          {/* Brasão renderizado diretamente da pasta public */}
           <img
             src="/brasao-paroquia.png"
             alt="Brasão Paróquia"
             className="w-32 h-32 md:w-36 md:h-36 object-contain mb-6 drop-shadow-xl z-10"
           />
-
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">RifaoCon</h1>
           <p className="text-white/70 text-sm md:text-base font-medium max-w-[280px] leading-relaxed">
             Ação entre Amigos<br />
