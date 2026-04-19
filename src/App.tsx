@@ -5,6 +5,7 @@ import { Dashboard } from './views/Dashboard';
 import { Resellers } from './views/Resellers';
 import { Inventory } from './views/Inventory';
 import { Login } from './views/Login';
+import { Admin } from './views/Admin'; // <-- Importe o Admin aqui
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -16,13 +17,20 @@ export default function App() {
 
   return (
     <div className="bg-surface text-on-surface min-h-screen selection:bg-primary-container selection:text-on-primary-container font-body flex flex-col">
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-      
-      {activeTab === 'dashboard' && <Dashboard />}
-      {activeTab === 'resellers' && <Resellers />}
-      {activeTab === 'inventory' && <Inventory />}
-      
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+
+      {/* Oculta o Header global na tela de Admin */}
+      {activeTab !== 'admin' && <Header activeTab={activeTab} setActiveTab={setActiveTab} />}
+
+      <div className="flex-1">
+        {/* Passamos o setActiveTab como propriedade para eles poderem mudar a aba */}
+        {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
+        {activeTab === 'resellers' && <Resellers />}
+        {activeTab === 'inventory' && <Inventory />}
+        {activeTab === 'admin' && <Admin setActiveTab={setActiveTab} />}
+      </div>
+
+      {/* Oculta o BottomNav global na tela de Admin */}
+      {activeTab !== 'admin' && <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />}
     </div>
   );
 }
