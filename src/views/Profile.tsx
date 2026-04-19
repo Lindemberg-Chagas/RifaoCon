@@ -10,6 +10,9 @@ export function Profile() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isNewRaffleModalOpen, setIsNewRaffleModalOpen] = useState(false);
 
+  // Estado para o Alerta Customizado padronizado
+  const [customAlert, setCustomAlert] = useState<string | null>(null);
+
   // Estados para nova rifa
   const [raffleName, setRaffleName] = useState('');
   const [raffleSize, setRaffleSize] = useState('20000');
@@ -29,14 +32,22 @@ export function Profile() {
     setRaffles(data || []);
   }
 
-  // --- ALTERAR RIFA ATIVA ---
+  // --- ALTERAR RIFA ATIVA (Atualizado com Alerta Customizado) ---
   const setActiveRaffle = async (id: string) => {
-    // 1. Desativar todas
-    await supabase.from('raffles').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
-    // 2. Ativar a selecionada
-    await supabase.from('raffles').update({ is_active: true }).eq('id', id);
-    fetchRaffles();
-    alert("Campanha alterada com sucesso! O Dashboard será atualizado.");
+    try {
+      // 1. Desativar todas
+      await supabase.from('raffles').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+      // 2. Ativar a selecionada
+      const { error } = await supabase.from('raffles').update({ is_active: true }).eq('id', id);
+
+      if (error) throw error;
+
+      fetchRaffles();
+      // Em vez do alert() do navegador, usamos o nosso estado
+      setCustomAlert("Campanha alterada com sucesso! O Dashboard será atualizado.");
+    } catch (error: any) {
+      setCustomAlert("Erro ao alterar campanha: " + error.message);
+    }
   };
 
   // --- CRIAR NOVA RIFA ---
@@ -46,10 +57,13 @@ export function Profile() {
       { name: raffleName, total_tickets: parseInt(raffleSize, 10), is_active: false }
     ]).select();
 
-    if (!error) {
+    if (error) {
+      setCustomAlert("Erro ao criar modelo: " + error.message);
+    } else if (data) {
       setRaffles([data[0], ...raffles]);
       setIsNewRaffleModalOpen(false);
       setRaffleName('');
+      setCustomAlert("Novo modelo '" + raffleName + "' criado com sucesso!");
     }
   };
 
@@ -60,7 +74,7 @@ export function Profile() {
     const { data: bondosos } = await supabase
       .from('bondosos')
       .select('*')
-      .eq('raffle_id', activeRaffle?.id) // Filtra apenas dados da rifa atual
+      .eq('raffle_id', activeRaffle?.id)
       .order('name');
 
     const doc = new jsPDF();
@@ -89,14 +103,12 @@ export function Profile() {
 
   return (
     <main className="flex-1 w-full max-w-2xl mx-auto px-5 pt-10 pb-40 min-h-screen">
-      {/* Cabeçalho do Perfil */}
       <div className="flex flex-col items-center mb-10">
         <img src={user.user_metadata.avatar_url} className="w-32 h-32 rounded-full border-8 border-[#cfa030] shadow-2xl" alt="Avatar" />
         <h2 className="mt-6 text-3xl font-black text-[#1e3a8a]">{user.user_metadata.full_name}</h2>
       </div>
 
       <div className="space-y-6">
-        {/* Gestão de Campanhas */}
         <div className="bg-[#5e85f0] p-8 rounded-[3rem] shadow-xl text-white">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest">Modelos de Rifas</h3>
@@ -122,7 +134,6 @@ export function Profile() {
           </div>
         </div>
 
-        {/* Botão Relatório */}
         <button
           onClick={generateReport}
           className="w-full p-8 bg-[#1e3a8a] rounded-[3rem] text-white font-black uppercase text-xs tracking-widest flex items-center justify-center gap-4 shadow-xl"
@@ -139,9 +150,9 @@ export function Profile() {
       {/* Modal Nova Rifa */}
       {isNewRaffleModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 text-[#1e3a8a]">
-          <div className="bg-white rounded-[3rem] w-full max-w-md p-8 animate-in zoom-in-95">
+          <div className="bg-white rounded-[3rem] w-full max-w-md p-8 animate-in zoom-in-95 shadow-2xl">
             <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-black uppercase">Novo Modelo</h3>
+              <h3 className="text-xl font-black uppercase tracking-tighter">Novo Modelo</h3>
               <button onClick={() => setIsNewRaffleModalOpen(false)}><X /></button>
             </div>
             <form onSubmit={handleCreateRaffle} className="space-y-6">
@@ -153,8 +164,23 @@ export function Profile() {
                 <label className="block text-[10px] font-black uppercase mb-2">Total de Números</label>
                 <input type="number" value={raffleSize} onChange={(e) => setRaffleSize(e.target.value)} className="w-full bg-slate-100 p-5 rounded-2xl font-bold outline-none" required />
               </div>
-              <button type="submit" className="w-full p-6 bg-[#5e85f0] text-white font-black rounded-3xl uppercase tracking-widest">Criar Modelo</button>
+              <button type="submit" className="w-full p-6 bg-[#5e85f0] text-white font-black rounded-3xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">Criar Modelo</button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL DE ALERTA CUSTOMIZADO PADRONIZADO --- */}
+      {customAlert && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 text-center">
+          <div className="bg-white rounded-[3rem] w-full max-w-md shadow-2xl p-10 animate-in zoom-in-95 duration-200 border-t-8 border-[#cfa030]">
+            <p className="text-[#1e3a8a] text-2xl font-black leading-relaxed mb-10">{customAlert}</p>
+            <button
+              onClick={() => setCustomAlert(null)}
+              className="w-full py-6 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] font-black rounded-2xl uppercase tracking-widest shadow-md text-lg transition-all active:scale-95"
+            >
+              Entendido
+            </button>
           </div>
         </div>
       )}
