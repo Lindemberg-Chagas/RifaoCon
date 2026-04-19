@@ -106,10 +106,8 @@ export function Resellers() {
     }
 
     const sold = parseInt(soldTickets, 10);
-    const amount = parseFloat(collectedAmount.replace(',', '.')); // Aceita vírgula ou ponto
+    const amount = parseFloat(collectedAmount.replace(',', '.'));
 
-    // Vamos considerar que se ele prestou contas, está "Pago". 
-    // Você pode mudar essa lógica depois se quiser ter status "Parcial".
     const { data, error } = await supabase
       .from('bondosos')
       .update({
@@ -125,7 +123,6 @@ export function Resellers() {
       console.error("Erro ao atualizar:", error);
       alert("Erro ao salvar a prestação de contas.");
     } else if (data) {
-      // Atualiza a lista na tela sem precisar recarregar a página
       setBondososList(bondososList.map(b => b.id === selectedBondoso.id ? data[0] : b));
       setIsAccountModalOpen(false);
       setSelectedBondoso(null);
@@ -141,19 +138,22 @@ export function Resellers() {
 
   return (
     <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 pt-28 md:pt-36 pb-32 md:pb-16 min-h-screen relative text-white">
-      <div className="mb-8 md:mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
-        <div>
-          <span className="text-[#60a5fa] font-label text-xs md:text-sm tracking-[0.15em] uppercase font-bold mb-2 block">Gerenciamento // v2.4</span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white">Bondosos</h2>
-        </div>
+
+      {/* NOVO LAYOUT DO CABEÇALHO */}
+      <div className="mb-8 md:mb-10 flex flex-col gap-4">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white">Bondosos</h2>
         <div className="flex flex-wrap gap-2 md:gap-3">
           <div className="bg-[#1e3a8a] px-4 py-2.5 md:py-3 rounded-xl flex items-center gap-2 shadow-sm border border-white/20">
             <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-white"></span>
-            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-white">Ativos {bondososList.filter(b => b.status === 'paid').length}</span>
+            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-white">
+              Finalizado {bondososList.filter(b => b.status === 'paid').length}
+            </span>
           </div>
           <div className="bg-[#1e3a8a] px-4 py-2.5 md:py-3 rounded-xl flex items-center gap-2 shadow-sm border border-[#cfa030]/50">
             <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#cfa030]"></span>
-            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-[#cfa030]">Pendentes {bondososList.filter(b => b.status === 'pending').length}</span>
+            <span className="text-xs md:text-sm font-bold tracking-tight uppercase text-[#cfa030]">
+              Pendentes {bondososList.filter(b => b.status === 'pending').length}
+            </span>
           </div>
         </div>
       </div>
@@ -199,7 +199,6 @@ export function Resellers() {
                 </div>
                 <div className="flex flex-col">
                   <p className="font-bold text-base text-white truncate">{reseller.name}</p>
-                  {/* Se já pagou, mostra quantos vendeu */}
                   {reseller.status === 'paid' && reseller.sold_tickets > 0 && (
                     <span className="text-[10px] text-[#cfa030] font-black uppercase tracking-widest">
                       Vendeu {reseller.sold_tickets} núm.
@@ -230,7 +229,6 @@ export function Resellers() {
                   <MessageCircle className="w-4 h-4" />
                 </button>
 
-                {/* Botão de Prestar Contas aparece se estiver pendente */}
                 {reseller.status === 'pending' && (
                   <button
                     onClick={() => openAccountability(reseller)}
@@ -244,6 +242,10 @@ export function Resellers() {
             </div>
           ))
         )}
+      </div>
+
+      <div className="mt-8 md:mt-12 text-center pb-8 md:pb-0">
+        <p className="text-xs md:text-sm font-bold text-white/30 tracking-[0.1em] uppercase">Fim da Lista — {bondososList.length} Registros</p>
       </div>
 
       <button
