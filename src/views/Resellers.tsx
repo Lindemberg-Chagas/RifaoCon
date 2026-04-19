@@ -7,6 +7,9 @@ export function Resellers() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Novo estado para o nosso Alerta Customizado da RifaoCon
+  const [customAlert, setCustomAlert] = useState<string | null>(null);
+
   // Estados do Modal de Cadastro
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -47,27 +50,22 @@ export function Resellers() {
     setNewPhone(formattedValue);
   };
 
-  // --- NOVA LÓGICA: ABRIR MODAL COM O PRÓXIMO NÚMERO LIVRE ---
   const handleOpenModal = () => {
     let nextAvailableStart = 0;
 
     if (bondososList.length > 0) {
-      // Descobre o maior número final já cadastrado no banco
       const maxEndNum = Math.max(...bondososList.map(b => {
         if (!b.range) return 0;
         const [, endStr] = b.range.split(' - ');
         return parseInt(endStr, 10) || 0;
       }));
-
-      // O próximo começo é o maior número + 1
       nextAvailableStart = maxEndNum + 1;
     }
 
-    // Garante que o número está alinhado com a regra de blocos de 12
     const alignedStart = Math.ceil(nextAvailableStart / NUMEROS_POR_BLOCO) * NUMEROS_POR_BLOCO;
 
     setNewRangeStart(alignedStart.toString());
-    setNewBlockCount('1'); // Sugere 1 bloco por padrão
+    setNewBlockCount('1');
     setNewName('');
     setNewPhone('');
     setIsModalOpen(true);
@@ -78,39 +76,35 @@ export function Resellers() {
     const phoneDigits = newPhone.replace(/\D/g, '');
 
     if (!newName || !phoneDigits || !newBlockCount || !newRangeStart) {
-      alert("Por favor, preencha todos os campos.");
+      setCustomAlert("Por favor, preencha todos os campos.");
       return;
     }
 
     if (phoneDigits.length < 10) {
-      alert("Por favor, insira um número válido com DDD.");
+      setCustomAlert("Por favor, insira um número válido com DDD.");
       return;
     }
 
     const startNum = parseInt(newRangeStart, 10);
     const blocks = parseInt(newBlockCount, 10);
 
-    // 1. VALIDAÇÃO DE MÚLTIPLO DE 12 (Ex: Não deixa começar no 10)
     if (startNum % NUMEROS_POR_BLOCO !== 0) {
-      alert(`O número inicial está quebrado! Ele deve ser um múltiplo de ${NUMEROS_POR_BLOCO} (Ex: 0, 12, 24, 36...).`);
+      setCustomAlert(`O número inicial está quebrado! Ele deve ser um múltiplo de ${NUMEROS_POR_BLOCO} (Ex: 0, 12, 24, 36...).`);
       return;
     }
 
     const endNum = startNum + (blocks * NUMEROS_POR_BLOCO) - 1;
 
-    // 2. VALIDAÇÃO DE COLISÃO (Verifica se a faixa bate com a de alguém)
     const isOverlapping = bondososList.some(bondoso => {
       if (!bondoso.range) return false;
       const [existingStartStr, existingEndStr] = bondoso.range.split(' - ');
       const existingStart = parseInt(existingStartStr, 10);
       const existingEnd = parseInt(existingEndStr, 10);
-
-      // Lógica de colisão: O novo começo é antes do fim existente E o novo fim é depois do começo existente
       return startNum <= existingEnd && endNum >= existingStart;
     });
 
     if (isOverlapping) {
-      alert("Erro de Colisão! Essa faixa de números já está alocada para outro bondoso. Escolha outro número inicial.");
+      setCustomAlert("Erro de Colisão! Essa faixa de números já está alocada para outro bondoso. Escolha outro número inicial.");
       return;
     }
 
@@ -131,7 +125,7 @@ export function Resellers() {
 
     if (error) {
       console.error("Erro ao salvar:", error);
-      alert("Erro ao salvar no banco de dados.");
+      setCustomAlert("Erro ao salvar no banco de dados.");
     } else if (data) {
       setBondososList([data[0], ...bondososList]);
       setIsModalOpen(false);
@@ -148,7 +142,7 @@ export function Resellers() {
   const handleAccountabilitySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!soldTickets || !collectedAmount) {
-      alert("Preencha a quantidade vendida e o valor recebido.");
+      setCustomAlert("Preencha a quantidade vendida e o valor recebido.");
       return;
     }
     const sold = parseInt(soldTickets, 10);
@@ -167,7 +161,7 @@ export function Resellers() {
 
     if (error) {
       console.error("Erro ao atualizar:", error);
-      alert("Erro ao salvar a prestação de contas.");
+      setCustomAlert("Erro ao salvar a prestação de contas.");
     } else if (data) {
       setBondososList(bondososList.map(b => b.id === selectedBondoso.id ? data[0] : b));
       setIsAccountModalOpen(false);
@@ -316,7 +310,6 @@ export function Resellers() {
         <p className="text-xs md:text-sm font-bold text-white/30 tracking-[0.1em] uppercase">Fim da Lista — {filteredBondosos.length} Registros</p>
       </div>
 
-      {/* Trocamos de setIsModalOpen(true) para a nossa nova função inteligente */}
       <button
         onClick={handleOpenModal}
         className="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-14 h-14 md:w-16 md:h-16 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] rounded-2xl md:rounded-full shadow-[0_10px_25px_rgba(207,160,48,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 z-40 border border-[#b58b29]"
@@ -431,6 +424,29 @@ export function Resellers() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL 3: ALERTA CUSTOMIZADO DA RIFAOCON --- */}
+      {customAlert && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-[#1e3a8a] px-6 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-black text-white">Sistema RifaoCon diz:</h3>
+              <button onClick={() => setCustomAlert(null)} className="text-white/70 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-[#1e3a8a] font-medium text-center">{customAlert}</p>
+              <button
+                onClick={() => setCustomAlert(null)}
+                className="mt-6 w-full px-4 py-3 bg-[#cfa030] hover:bg-[#b58b29] text-[#1e3a8a] font-black rounded-xl transition-colors shadow-md"
+              >
+                OK
+              </button>
+            </div>
           </div>
         </div>
       )}
