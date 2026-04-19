@@ -48,7 +48,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
   // Cores do gráfico ajustadas para o novo esquema
   const chartData = [
     { name: 'VENDIDOS', value: stats.vendidos, color: '#cfa030' },
-    { name: 'COM REVENDEDORES', value: stats.pendentes, color: '#ffffff' },
+    { name: 'COM BONDOSOS', value: stats.pendentes, color: '#ffffff' },
     { name: 'DISPONÍVEIS', value: disponiveis, color: '#1e3a8a' } // Azul escuro para contraste interno
   ];
 
